@@ -87,10 +87,7 @@
     async function restoreSessionFromStorage() {
         const prefs = readPrefs();
         applySavedAudioToRadios(prefs.audioMode);
-        pendingRestoreTime =
-            typeof prefs.transportTime === 'number' && Number.isFinite(prefs.transportTime)
-                ? prefs.transportTime
-                : null;
+        pendingRestoreTime = 0;
 
         if (!window.indexedDB) {
             writeLog('IndexedDB unavailable; skipped video blob restore.');
@@ -110,9 +107,6 @@
         if (row.audioMode) applySavedAudioToRadios(row.audioMode);
         if (row.viewMode) applySavedViewMode(row.viewMode);
         if (typeof row.loopPlayback === 'boolean') applySavedLoopPlayback(row.loopPlayback);
-        if (typeof row.transportTime === 'number' && Number.isFinite(row.transportTime)) {
-            pendingRestoreTime = row.transportTime;
-        }
 
         if (row.lBlob && row.rBlob) {
             const fl = new File([row.lBlob], row.lName || 'left.mp4', {
