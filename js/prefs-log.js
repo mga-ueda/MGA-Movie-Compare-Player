@@ -164,6 +164,7 @@
                     transportTime: parseFloat(seekBar.value) || 0,
                     viewMode: getViewMode(),
                     loopPlayback: getLoopPlaybackEnabled(),
+                    autoPlay: getAutoPlayEnabled(),
                     exportMode: getExportMode(),
                     exportBurnTc: getExportBurnTc(),
                 })

@@ -34,6 +34,8 @@
             updatePanelInfoLine('right');
             setLoaded(panelRight, true);
             reorderTwoLoadedByDate();
+            autoPlayAfterUserLoad = true;
+            autoPlayLatch = false;
             writeLog('Loaded right: ' + f.name);
             schedulePersistSession();
         } else {

@@ -1,18 +1,99 @@
     // === 12. メディアイベント・トランスポート UI・キーボード・起動（boot）
+    function armAutoPlayGestureRetry() {
+        if (autoPlayGestureRetryArmed || !getAutoPlayEnabled()) return;
+        autoPlayGestureRetryArmed = true;
+        const retry = () => {
+            autoPlayGestureRetryArmed = false;
+            document.removeEventListener('pointerdown', retry, true);
+            document.removeEventListener('keydown', retry, true);
+            if (!getAutoPlayEnabled() || !bothReady() || pipExportActive) return;
+            if (!videoLeft.paused || !videoRight.paused) return;
+            autoPlayLatch = false;
+            requestAutoPlay('user gesture retry', true);
+        };
+        document.addEventListener('pointerdown', retry, true);
+        document.addEventListener('keydown', retry, true);
+    }
+
+    async function waitUntilTransportPlaying(maxFrames) {
+        const limit = maxFrames > 0 ? maxFrames : 15;
+        for (let i = 0; i < limit; i++) {
+            if (!videoLeft.paused && !videoRight.paused) return true;
+            await new Promise((resolve) => requestAnimationFrame(resolve));
+        }
+        return !videoLeft.paused && !videoRight.paused;
+    }
+
+    function requestAutoPlay(source, force) {
+        if (!bothReady()) {
+            autoPlayLatch = false;
+            return;
+        }
+        if (!getAutoPlayEnabled() || pipExportActive) return;
+        if (transportPlayInFlight) return;
+        if (!force && autoPlayLatch) return;
+        if (!videoLeft.paused || !videoRight.paused) {
+            autoPlayLatch = true;
+            return;
+        }
+        autoPlayLatch = true;
+        writeLog('Auto play: ' + source + ' — starting playback');
+        applyTimeToVideos(parseFloat(seekBar.value) || 0);
+        void resumeTransportPlaybackAfterSeek();
+    }
+
+    function maybeAutoPlayWhenBothReady() {
+        requestAutoPlay('both videos ready', false);
+    }
+
+    function scheduleSessionTransportRestoreRetry() {
+        if (sessionRestoreListenersArmed) return;
+        sessionRestoreListenersArmed = true;
+        let tries = 0;
+        const tick = () => {
+            if (!bothReady()) return;
+            if (pendingRestoreTime == null) {
+                sessionRestoreListenersArmed = false;
+                return;
+            }
+            primePendingRestoreTransportUi();
+            if (!applyPendingTransportRestore()) {
+                if (tries++ < 24) requestAnimationFrame(tick);
+                return;
+            }
+            writeLog(
+                'Restored transport to ' + formatTimecodeForTransport(parseFloat(seekBar.value) || 0)
+            );
+            sessionRestoreListenersArmed = false;
+        };
+        tick();
+        videoLeft.addEventListener('canplay', tick, { once: true });
+        videoRight.addEventListener('canplay', tick, { once: true });
+    }
+
+    function onBothVideosMediaReady() {
+        if (!bothReady()) return;
+        if (pendingRestoreTime != null) {
+            primePendingRestoreTransportUi();
+            if (applyPendingTransportRestore()) {
+                writeLog(
+                    'Restored transport to ' + formatTimecodeForTransport(parseFloat(seekBar.value) || 0)
+                );
+            } else {
+                scheduleSessionTransportRestoreRetry();
+            }
+            return;
+        }
+        if (!autoPlayAfterUserLoad) return;
+        autoPlayAfterUserLoad = false;
+        maybeAutoPlayWhenBothReady();
+    }
+
     function onMetaFor(side) {
         updatePanelInfoLine(side);
-        if (pendingRestoreTime != null && Number.isFinite(pendingRestoreTime) && bothReady()) {
-            const dur = masterDuration();
-            const t = Math.max(0, Math.min(pendingRestoreTime, dur - 0.001));
-            pendingRestoreTime = null;
-            applyTimeToVideos(t);
-            seekBar.value = String(t);
-            currentTimeEl.textContent = formatTimecodeForTransport(t);
-            updateDriftAndOverlays();
-            writeLog('Restored transport to ' + formatTimecodeForTransport(t));
-        }
         syncSeekMax();
         updateControlsEnabled();
+        onBothVideosMediaReady();
     }
     videoLeft.addEventListener('loadedmetadata', () => onMetaFor('left'));
     videoRight.addEventListener('loadedmetadata', () => onMetaFor('right'));
@@ -26,7 +107,10 @@
         if (durationProgressRaf) return;
         durationProgressRaf = requestAnimationFrame(() => {
             durationProgressRaf = 0;
-            if (bothReady()) return;
+            if (bothReady()) {
+                onBothVideosMediaReady();
+                return;
+            }
             syncSeekMax();
             updateControlsEnabled();
             updatePanelInfoLine('left');
@@ -67,6 +151,12 @@
     if (loopPlaybackCheckbox) {
         loopPlaybackCheckbox.addEventListener('change', () => {
             logAndPersistLoopPlayback();
+        });
+    }
+
+    if (autoPlayCheckbox) {
+        autoPlayCheckbox.addEventListener('change', () => {
+            logAndPersistAutoPlay();
         });
     }
 
@@ -153,28 +243,42 @@
 
     /** シーク後に左右を再生（キー / Numpad ジャンプで止まったとき用。再生ボタンからも利用） */
     async function resumeTransportPlaybackAfterSeek() {
-        if (!bothReady()) return;
-        ensureWebAudioRouting();
-        if (audioCtx && audioCtx.state === 'suspended') {
+        if (!bothReady()) return false;
+        if (transportPlayInFlight) return transportPlayInFlight;
+
+        transportPlayInFlight = (async () => {
+            ensureWebAudioRouting();
+            if (audioCtx && audioCtx.state === 'suspended') {
+                try {
+                    await audioCtx.resume();
+                } catch (_) {}
+            }
+            releaseStuckEnded();
             try {
-                await audioCtx.resume();
-            } catch (_) {}
-        }
-        releaseStuckEnded();
-        try {
-            await videoLeft.play();
-            await videoRight.play();
-            setPlayingUi(true);
-            if (!rafId) rafId = requestAnimationFrame(tick);
-        } catch (err) {
-            writeLog(
-                'Transport: resume after seek failed — ' +
-                    (err && err.message ? err.message : String(err))
-            );
-            videoLeft.pause();
-            videoRight.pause();
-            setPlayingUi(false);
-        }
+                await videoLeft.play();
+                await videoRight.play();
+                if (!(await waitUntilTransportPlaying())) {
+                    throw new Error('videos remain paused after play()');
+                }
+                setPlayingUi(true);
+                if (!rafId) rafId = requestAnimationFrame(tick);
+                return true;
+            } catch (err) {
+                autoPlayLatch = false;
+                writeLog(
+                    'Transport: resume failed — ' + (err && err.message ? err.message : String(err))
+                );
+                videoLeft.pause();
+                videoRight.pause();
+                setPlayingUi(false);
+                if (getAutoPlayEnabled()) armAutoPlayGestureRetry();
+                return false;
+            } finally {
+                transportPlayInFlight = null;
+            }
+        })();
+
+        return transportPlayInFlight;
     }
 
     playStopBtn.addEventListener('click', async () => {
@@ -340,6 +444,21 @@
             return;
         }
 
+        if (
+            !e.repeat &&
+            !e.ctrlKey &&
+            !e.altKey &&
+            !e.metaKey &&
+            !e.shiftKey &&
+            e.code === 'KeyA'
+        ) {
+            if (!autoPlayCheckbox) return;
+            e.preventDefault();
+            autoPlayCheckbox.checked = !autoPlayCheckbox.checked;
+            logAndPersistAutoPlay();
+            return;
+        }
+
         const numpadSeekDigit = {
             Numpad0: 0,
             Numpad1: 1,
@@ -465,9 +584,14 @@
     syncSeekMax();
     updateControlsEnabled();
 
+    function persistOnPageExit() {
+        writePrefs();
+        persistSessionToStorage().catch(() => {});
+    }
+
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'hidden') {
-            writePrefs();
+            persistOnPageExit();
             persistSessionToStorage()
                 .then(() => writeLog('Session: persisted (tab hidden)'))
                 .catch((err) =>
@@ -478,6 +602,8 @@
                 );
         }
     });
+    window.addEventListener('pagehide', persistOnPageExit);
+    window.addEventListener('beforeunload', persistOnPageExit);
 
     (async function boot() {
         try {
@@ -487,4 +613,5 @@
         }
         syncSeekMax();
         updateControlsEnabled();
+        onBothVideosMediaReady();
     })();

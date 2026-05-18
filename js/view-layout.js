@@ -87,3 +87,20 @@
         flashTransportOptBox('loop');
     }
 
+    function getAutoPlayEnabled() {
+        return !!(autoPlayCheckbox && autoPlayCheckbox.checked);
+    }
+
+    function applySavedAutoPlay(enabled) {
+        if (!autoPlayCheckbox) return;
+        autoPlayCheckbox.checked = enabled !== false;
+    }
+
+    function logAndPersistAutoPlay() {
+        const on = getAutoPlayEnabled();
+        writePrefs();
+        writeLog('Auto play: ' + (on ? 'ON' : 'OFF'));
+        flashSeekHint('Auto Play', on ? 'ON' : 'OFF', 'notice');
+        flashTransportOptBox('loop');
+    }
+

@@ -86,6 +86,13 @@
 
     function updateSeekUiFromVideos() {
         const dur = masterDuration();
+        if (!isSeeking && pendingRestoreTime != null && Number.isFinite(pendingRestoreTime)) {
+            const t = Math.max(0, Math.min(pendingRestoreTime, dur - 0.001));
+            seekBar.value = String(t);
+            currentTimeEl.textContent = formatTimecodeForTransport(t);
+            updateDriftAndOverlays();
+            return;
+        }
         const tL = videoLeft.currentTime || 0;
         const tR = videoRight.currentTime || 0;
         if (!isSeeking) {
@@ -94,6 +101,32 @@
             currentTimeEl.textContent = formatTimecodeForTransport(Math.min(t, dur));
         }
         updateDriftAndOverlays();
+    }
+
+    function primePendingRestoreTransportUi() {
+        if (pendingRestoreTime == null || !Number.isFinite(pendingRestoreTime)) return;
+        const t = Math.max(0, pendingRestoreTime);
+        seekBar.value = String(t);
+        currentTimeEl.textContent = formatTimecodeForTransport(t);
+    }
+
+    /** 復元待ちのシーク位置を両 video に反映。seek 可能になるまで pending を維持 */
+    function applyPendingTransportRestore() {
+        if (pendingRestoreTime == null || !Number.isFinite(pendingRestoreTime)) return false;
+        if (!bothReady()) return false;
+        if (videoLeft.readyState < 2 || videoRight.readyState < 2) return false;
+        const dur = masterDuration();
+        const t = Math.max(0, Math.min(pendingRestoreTime, dur - 0.001));
+        applyTimeToVideos(t);
+        seekBar.value = String(t);
+        currentTimeEl.textContent = formatTimecodeForTransport(t);
+        updateDriftAndOverlays();
+        const tL = videoLeft.currentTime || 0;
+        const tR = videoRight.currentTime || 0;
+        const drift = Math.max(Math.abs(tL - t), Math.abs(tR - t));
+        if (t > 0.02 && drift > 0.2) return false;
+        pendingRestoreTime = null;
+        return true;
     }
 
     /**
@@ -723,6 +756,9 @@
 
     function assignPairToVideos(olderFile, newerFile, opt) {
         revokeAll();
+        autoPlayLatch = false;
+        sessionRestoreListenersArmed = false;
+        if (!opt || !opt.skipAutoPlay) autoPlayAfterUserLoad = true;
         fileLeft = olderFile;
         fileRight = newerFile;
         urlLeft = URL.createObjectURL(olderFile);

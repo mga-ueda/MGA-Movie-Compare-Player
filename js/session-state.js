@@ -36,6 +36,14 @@
     let pendingRestoreTime = null;
     let persistSessionTimer = null;
 
+    /** 同一ペアへの自動再生を一度だけ試すラッチ（失敗時は解除して再試行可） */
+    let autoPlayLatch = false;
+    let autoPlayGestureRetryArmed = false;
+    let sessionRestoreListenersArmed = false;
+    let transportPlayInFlight = null;
+    /** ドロップ／ファイル選択で両方がそろう直前に立てる（リロード復元では立てない） */
+    let autoPlayAfterUserLoad = false;
+
     /** MP4 コンテナ（moov / stts 等）から得た平均 FPS。null は未解析 */
     const containerFps = { left: null, right: null };
 

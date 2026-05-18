@@ -84,10 +84,22 @@
         await idbPut(IDB_KEY_LAST, row);
     }
 
+    function resolvePendingRestoreTime(prefs, row) {
+        if (row && typeof row.transportTime === 'number' && Number.isFinite(row.transportTime)) {
+            return row.transportTime;
+        }
+        if (prefs && typeof prefs.transportTime === 'number' && Number.isFinite(prefs.transportTime)) {
+            return prefs.transportTime;
+        }
+        return 0;
+    }
+
     async function restoreSessionFromStorage() {
+        sessionRestoreListenersArmed = false;
+        autoPlayAfterUserLoad = false;
         const prefs = readPrefs();
         applySavedAudioToRadios(prefs.audioMode);
-        pendingRestoreTime = 0;
+        applySavedAutoPlay(prefs.autoPlay);
 
         if (!window.indexedDB) {
             writeLog('IndexedDB unavailable; skipped video blob restore.');
@@ -107,6 +119,8 @@
         if (row.audioMode) applySavedAudioToRadios(row.audioMode);
         if (row.viewMode) applySavedViewMode(row.viewMode);
         if (typeof row.loopPlayback === 'boolean') applySavedLoopPlayback(row.loopPlayback);
+        pendingRestoreTime = resolvePendingRestoreTime(prefs, row);
+        primePendingRestoreTransportUi();
 
         if (row.lBlob && row.rBlob) {
             const fl = new File([row.lBlob], row.lName || 'left.mp4', {
@@ -117,7 +131,7 @@
                 type: mimeTypeHintForVideoFileName(row.rName || 'right.mp4'),
                 lastModified: typeof row.rm === 'number' ? row.rm : Date.now(),
             });
-            assignPairToVideos(fl, fr, { skipPersist: true });
+            assignPairToVideos(fl, fr, { skipPersist: true, skipAutoPlay: true });
             writeLog('Restored pair: ' + fl.name + ' / ' + fr.name);
             return;
         }

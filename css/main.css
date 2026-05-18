@@ -891,6 +891,10 @@
             min-width: 0;
             max-width: 100%;
         }
+        .transport-opt-cell--loop {
+            flex-wrap: wrap;
+            gap: 6px 10px;
+        }
         .transport-compact-lbl {
             flex-shrink: 0;
             font-size: var(--transport-opt-font-size);
