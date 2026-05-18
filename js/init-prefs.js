@@ -10,5 +10,5 @@
         } catch (_) {}
     })();
 
-    writeLog('MGA Movie Compare Player started (v1.0).');
+    writeLog('MGA Movie Compare Player started (v1.00).');
 

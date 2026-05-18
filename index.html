@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#1a1410">
-    <title>MGA Movie Compare Player · v1.0</title>
+    <title>MGA Movie Compare Player · v1.00</title>
     <link rel="icon" type="image/png" href="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f3ac.png">
 
     <link rel="stylesheet" href="css/main.css">
@@ -61,7 +61,7 @@
     <header class="app-header">
         <div class="app-header-inner">
             <h2 class="app-title">MGA Movie Compare Player</h2>
-            <span class="version-badge">v1.0</span>
+            <span class="version-badge">v1.00</span>
         </div>
     </header>
 
@@ -192,7 +192,7 @@
     </div>
 
     <div class="bottom-info">
-        <div id="log">&gt; Idle (v1.0)</div>
+        <div id="log">&gt; System Ready. (v1.00)</div>
         <div class="shortcut-guide">
             <strong class="shortcut-guide__title">キーボードショートカット</strong>
             <div class="shortcut-sheet" aria-label="キーボードショートカット一覧">
@@ -431,7 +431,7 @@
     <details class="app-doc-fold">
         <summary class="app-doc-fold__summary" id="app-manual-version-heading">バージョン情報</summary>
         <div class="app-doc-fold__body app-manual">
-            <h3>v1.0 - 2026年5月14日</h3>
+            <h3>v1.00 - 2026年5月14日</h3>
             <ul>
                 <li>初稿（初版リリース）</li>
             </ul>
@@ -441,7 +441,10 @@
     <details class="app-doc-fold">
         <summary class="app-doc-fold__summary" id="app-manual-source-heading">ソースコードを改変する場合</summary>
         <div class="app-doc-fold__body app-manual">
-            <p>改変用のソースは <a href="https://github.com/mga-ueda/MGA-Movie-Compare-Player" target="_blank" rel="noopener noreferrer">GitHub リポジトリ（mga-ueda/MGA-Movie-Compare-Player）</a> から取得できます（<code>Code</code> → <code>Download ZIP</code> または <code>git clone</code>）。</p>
+            <h3>ソースの取得</h3>
+            <ul>
+                <li>改変用のソースは <a href="https://github.com/mga-ueda/MGA-Movie-Compare-Player" target="_blank" rel="noopener noreferrer">GitHub リポジトリ（mga-ueda/MGA-Movie-Compare-Player）</a> から取得できます（<code>Code</code> → <code>Download ZIP</code> または <code>git clone</code>）。</li>
+            </ul>
             <h3>ソースの読み方と、ブラウザへの保存（キーとフィールド）</h3>
             <ul>
                 <li>スクリプトは <code>index.html</code> 末尾の <code>&lt;script&gt;</code> 順（<code>js/dom-refs.js</code>（DOM 参照）→ … → <code>js/events-boot.js</code>（イベント・起動））で読み込まれ、同一グローバルスコープで実行されます。<code>js/dom-refs.js</code> 先頭に読み込み順と改造ポイントの目安があります。大きな処理は各ファイル内の <code>// === …</code> 区切りコメントでブロック化されているので、エディタで <code>===</code> を検索するとたどれます。UI は <code>index.html</code> のトランスポート付近の HTML と、<code>js/</code> 内の状態・イベント処理が中心です。</li>
