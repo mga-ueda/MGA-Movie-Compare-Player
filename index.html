@@ -1,0 +1,4309 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#1a1410">
+    <title>MGA Movie Compare Player · v1.0</title>
+    <link rel="icon" type="image/png" href="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f3ac.png">
+    <style>
+        :root {
+            --transport-frame-pad-y: 10px;
+            --transport-frame-pad-x: 12px;
+            --transport-frame-border: 1px;
+            --transport-frame-inner-h: 24px;
+            --transport-frame-outer-h: calc(
+                2 * var(--transport-frame-pad-y) + var(--transport-frame-inner-h) + 2 * var(--transport-frame-border)
+            );
+            --accent: #ff9933;
+            --accent-mid: #e57a1c;
+            --accent-deep: #8a3d00;
+            --accent-ink: #e07018;
+            --accent-soft: #e09040;
+            --accent-glow: rgba(255, 153, 51, 0.5);
+            --accent-glow-weak: rgba(255, 153, 51, 0.14);
+            --accent-border: rgba(255, 180, 120, 0.45);
+            --accent-track-1: #1c0f07;
+            --accent-track-2: #301806;
+            --accent-track-3: #4a280c;
+            --transport-opt-font-size: 0.76rem;
+            /* オプション枠内のコントロール高（select と揃え、3 枠の高さを一致させる） */
+            --transport-opt-control-h: 30px;
+            --transport-opt-box-min-h: calc(
+                2 * var(--transport-frame-pad-y) + var(--transport-opt-control-h) + 2 * var(--transport-frame-border)
+            );
+            /** シーク行: 現在 / 総尺の枠と再生ボタンの外寸を揃える（button の UA 余白込みで少し高め） */
+            --transport-seek-align-h: 36px;
+            /*
+             * 文字色の役割（sample.html と同じ分担。サンプルのシアン #7dd8ff は --app-accent に相当）
+             *   --app-doc-text … 折りたたみ本文・マニュアル本文・箇条書き（sample: .app-doc-fold__body #d4dbe6）
+             *   --app-accent … マニュアル h3/h4、本文内リンク、フッター内リンク、トランスポートの時刻・数値強調など
+             *                   （sample では見出し・リンク・#playStopBtn 付近の値表示などに同一トーン #7dd8ff）
+             *   インライン code … 本文と同色（inherit。sample に code 専用色はなし）
+             *   ショートカット表 … ベース #b4bcc8 / 表見出し #c8d0dc / 先頭列 #d0d8e4（sample と同じ固定色）
+             *   フッター … 外周 #8a92a4 / コピーライト #9aa4b8 / リンクは --app-accent（sample は #7dd8ff）
+             */
+            --app-doc-text: #d4dbe6;
+            --app-accent: var(--accent-ink);
+            --app-shortcut-text: #b4bcc8;
+            --app-shortcut-heading: #c8d0dc;
+            --app-shortcut-col1: #d0d8e4;
+        }
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+            background: #141418;
+            color: #f0f0f5;
+            padding: 8px 20px 20px;
+            margin: 0;
+            max-width: none;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .layout-narrow {
+            max-width: 1300px;
+            margin-left: auto;
+            margin-right: auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .app-header {
+            margin: 0 0 18px;
+            padding: 18px 0 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .app-header-inner {
+            display: inline-flex;
+            flex-wrap: nowrap;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 12px;
+            max-width: 100%;
+            transform: translateX(calc((3.35rem + 12px) / 2));
+        }
+        h2.app-title {
+            margin: 0;
+            font-size: 1.55rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            color: #eef2f8;
+            text-align: center;
+            line-height: 1;
+            text-decoration: none;
+            box-sizing: border-box;
+            align-self: flex-end;
+        }
+        .version-badge {
+            font-size: 11px;
+            background: linear-gradient(180deg, var(--accent) 0%, var(--accent-mid) 48%, var(--accent-deep) 100%);
+            color: #1a0f08;
+            padding: 3px 10px;
+            border-radius: 999px;
+            vertical-align: middle;
+            margin-left: 10px;
+            font-weight: 800;
+            border: 1px solid var(--accent-border);
+            box-shadow: 0 2px 10px var(--accent-glow-weak);
+        }
+        .app-header .version-badge {
+            margin-left: 0;
+            flex-shrink: 0;
+            line-height: 1.1;
+            box-sizing: border-box;
+            align-self: flex-end;
+            vertical-align: unset;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #main-drop-zone {
+            background: linear-gradient(165deg, #2a2a32 0%, #1a1a20 100%);
+            padding: 24px 22px 22px;
+            min-height: 5.5em;
+            border-radius: 14px;
+            border: 3px dashed rgba(255, 255, 255, 0.22);
+            text-align: center;
+            margin-bottom: 18px;
+            cursor: pointer;
+            transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-sizing: border-box;
+        }
+        #main-drop-zone:hover {
+            background: linear-gradient(165deg, #34343e 0%, #222228 100%);
+            border-color: rgba(255, 153, 51, 0.72);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 24px var(--accent-glow-weak);
+        }
+        #main-drop-zone.dragover {
+            border: 3px dashed var(--accent);
+            background: linear-gradient(165deg, #352a22 0%, #221a16 100%);
+        }
+        #main-drop-zone .drop-zone-title {
+            color: #c8d0e0;
+            font-size: 0.95em;
+            letter-spacing: 0.03em;
+            margin: 0;
+            line-height: 1.4;
+        }
+        #main-drop-zone .drop-zone-note {
+            margin: 0;
+            font-size: 0.76em;
+            font-weight: 500;
+            color: #8e96a8;
+            line-height: 1.45;
+            max-width: 42rem;
+        }
+
+        .compare-stage {
+            margin: 0 auto 18px;
+            width: 100%;
+            max-width: none;
+            box-sizing: border-box;
+        }
+        /** 合成ビュー時は左右 2 パネルを完全に非表示（動画はスタック側へ移動済み） */
+        .compare-stage--composite .compare-grid,
+        .compare-grid[hidden] {
+            display: none !important;
+        }
+        .compare-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin: 0;
+            width: 100%;
+            max-width: none;
+            box-sizing: border-box;
+        }
+        @media (max-width: 720px) {
+            .compare-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .video-panel {
+            background: linear-gradient(165deg, #32323c 0%, #1f1f26 42%, #26262f 100%);
+            padding: 16px 14px 18px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow:
+                0 14px 36px rgba(0, 0, 0, 0.42),
+                inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            position: relative;
+            overflow: hidden;
+        }
+        .video-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #3a3a44, #555, #3a3a44);
+            opacity: 0.85;
+        }
+        .video-panel.loaded::before {
+            background: linear-gradient(90deg, var(--accent-deep), var(--accent), var(--accent-deep));
+        }
+        .video-panel-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #8e96a8;
+            margin: 0 0 8px;
+            text-align: center;
+        }
+        .video-panel.loaded .video-panel-label {
+            color: var(--app-accent);
+        }
+        .panel-info-line {
+            margin: -4px 0 10px;
+            font-size: 0.68rem;
+            font-weight: 500;
+            color: #7a8294;
+            text-align: center;
+            letter-spacing: 0.02em;
+            line-height: 1.45;
+            max-width: 100%;
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
+        .video-panel.loaded .panel-info-line {
+            color: #b8c4d8;
+        }
+        .file-name {
+            display: block;
+            font-size: 0.78em;
+            color: #5a5a68;
+            font-weight: 500;
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            line-height: 1.3;
+            letter-spacing: 0.02em;
+            padding: 5px 10px;
+            margin: 0 0 10px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.028);
+        }
+        .video-panel.loaded .file-name {
+            color: #e4e8f0;
+            font-weight: 600;
+            border-color: rgba(255, 153, 51, 0.22);
+            background: rgba(50, 28, 0, 0.22);
+        }
+        .video-frame {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #0a0a0e;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.65);
+        }
+        .video-frame video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+        .video-frame--stack {
+            background: #0a0a0e;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.65);
+        }
+        .video-frame--stack video {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+        .video-frame--stack .video-timecode {
+            z-index: 4;
+        }
+        .compare-stage--composite .video-frame--stack .video-timecode {
+            font-size: clamp(22px, 2.7vw, 28px);
+            padding: 8px 14px;
+            left: 14px;
+            bottom: 14px;
+        }
+        .video-stack-top--diff {
+            z-index: 2;
+            mix-blend-mode: difference;
+            opacity: 1;
+        }
+        .video-stack-top--cross {
+            z-index: 2;
+            mix-blend-mode: normal;
+            opacity: 0.75;
+        }
+        .video-stack-bottom {
+            z-index: 1;
+        }
+        .compare-composite {
+            box-sizing: border-box;
+        }
+        .video-panel.video-panel--composite::before {
+            background: linear-gradient(90deg, var(--accent-deep), var(--accent), var(--accent-deep));
+            opacity: 0.92;
+        }
+        .compare-composite .video-panel--composite {
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow:
+                0 14px 36px rgba(0, 0, 0, 0.42),
+                inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        }
+        .compare-composite[hidden] {
+            display: none !important;
+        }
+        .video-timecode {
+            position: absolute;
+            left: 10px;
+            bottom: 10px;
+            z-index: 2;
+            font-family: 'Consolas', 'Monaco', 'Cascadia Mono', monospace;
+            font-size: clamp(11px, 1.35vw, 14px);
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            color: #fff4e8;
+            text-shadow:
+                0 0 6px rgba(0, 0, 0, 0.95),
+                0 1px 3px rgba(0, 0, 0, 0.9),
+                0 0 1px rgba(0, 0, 0, 1);
+            line-height: 1.2;
+            pointer-events: none;
+            user-select: none;
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: rgba(8, 10, 18, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .video-timecode--idle {
+            opacity: 0.45;
+        }
+
+        .transport-bar {
+            background: linear-gradient(165deg, #32323c 0%, #1f1f26 42%, #26262f 100%);
+            padding: 12px 14px 14px;
+            border-radius: 14px;
+            margin-bottom: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 14px 36px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        }
+        .seek-container {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex: 1;
+            min-width: 0;
+            box-sizing: border-box;
+            min-height: var(--transport-frame-outer-h);
+            padding: var(--transport-frame-pad-y) var(--transport-frame-pad-x);
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.28);
+            border: var(--transport-frame-border) solid rgba(255, 255, 255, 0.05);
+        }
+        .transport-row-seek {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            width: 100%;
+        }
+        .transport-row-seek #playStopBtn {
+            flex-shrink: 0;
+        }
+        .seek-bar-wrap {
+            flex-grow: 1;
+            min-width: 0;
+            position: relative;
+            display: flex;
+            align-items: center;
+            height: 22px;
+        }
+        .seek-bar-track-bg {
+            pointer-events: none;
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 10px;
+            border-radius: 999px;
+            z-index: 0;
+            background: linear-gradient(90deg, var(--accent-track-1) 0%, var(--accent-track-2) 42%, var(--accent-track-3) 58%, #140805 100%);
+            box-shadow:
+                inset 0 2px 8px rgba(0, 0, 0, 0.86),
+                inset 0 0 0 1px rgba(255, 100, 40, 0.045);
+        }
+        @keyframes seekBarGradientMarquee {
+            0% { background-position: 100% 0; }
+            100% { background-position: 0 0; }
+        }
+        .seek-bar-wrap--playing .seek-bar-track-bg {
+            background-image: linear-gradient(
+                90deg,
+                var(--accent-track-1) 0%,
+                var(--accent-track-2) 21%,
+                var(--accent-track-3) 29%,
+                #140805 42%,
+                var(--accent-track-1) 50%,
+                var(--accent-track-2) 71%,
+                var(--accent-track-3) 79%,
+                #140805 92%,
+                var(--accent-track-1) 100%
+            );
+            background-size: 200% 100%;
+            background-repeat: no-repeat;
+            animation: seekBarGradientMarquee 2.6s linear infinite;
+            box-shadow:
+                inset 0 2px 8px rgba(0, 0, 0, 0.86),
+                inset 0 0 0 1px rgba(255, 100, 40, 0.045);
+        }
+        #seekBar {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            height: 10px;
+            margin: 0;
+            cursor: pointer;
+            accent-color: var(--accent);
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+        }
+        #seekBar:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        #seekBar::-webkit-slider-runnable-track {
+            height: 10px;
+            border-radius: 999px;
+            background: transparent;
+            box-shadow: none;
+        }
+        #seekBar::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 12px;
+            margin-top: -1px;
+            border-radius: 5px;
+            background: linear-gradient(180deg, #fff0e6 0%, #e8a878 42%, #a85a20 100%);
+            border: 1px solid rgba(100, 48, 18, 0.88);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.45),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.22),
+                0 1px 2px rgba(0, 0, 0, 0.45);
+        }
+        #seekBar:focus-visible {
+            outline: none;
+        }
+        #seekBar:focus-visible::-webkit-slider-thumb {
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.45),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.22),
+                0 0 0 2px var(--accent-glow),
+                0 1px 2px rgba(0, 0, 0, 0.45);
+        }
+        #seekBar::-moz-range-track {
+            height: 10px;
+            border-radius: 999px;
+            background: transparent;
+            box-shadow: none;
+        }
+        #seekBar::-moz-range-thumb {
+            width: 18px;
+            height: 12px;
+            border-radius: 5px;
+            border: 1px solid rgba(100, 48, 18, 0.88);
+            background: linear-gradient(180deg, #fff0e6 0%, #e8a878 50%, #a85a20 100%);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 2px rgba(0, 0, 0, 0.45);
+        }
+        #seekBar:focus-visible::-moz-range-thumb {
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.4),
+                0 0 0 2px var(--accent-glow),
+                0 1px 2px rgba(0, 0, 0, 0.45);
+        }
+        .time-display {
+            box-sizing: border-box;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            height: var(--transport-seek-align-h);
+            min-height: var(--transport-seek-align-h);
+            max-height: var(--transport-seek-align-h);
+            padding: 0 10px;
+            border-radius: 8px;
+            background: rgba(8, 10, 18, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-family: 'Consolas', 'Monaco', 'Cascadia Mono', monospace;
+            font-size: 12px;
+            line-height: 1;
+            min-width: 132px;
+            text-align: center;
+            color: var(--app-accent);
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+        .timecode-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 10px 16px;
+            font-family: 'Consolas', 'Monaco', 'Cascadia Mono', monospace;
+            font-size: 12px;
+            line-height: 1.35;
+            color: #aeb6ca;
+            padding: 2px 4px 0;
+        }
+        .timecode-row .tc-side {
+            color: #c8d4e8;
+            font-weight: 600;
+            font-size: inherit;
+        }
+        .timecode-row .tc-val {
+            color: var(--app-accent);
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            font-size: inherit;
+        }
+        .timecode-row .tc-drift-ok {
+            color: #7fff9a;
+            font-size: inherit;
+        }
+        .timecode-row .tc-drift-warn {
+            color: #ffeb3b;
+            font-size: inherit;
+        }
+        .timecode-row .tc-drift-bad {
+            color: #ff3333;
+            font-size: inherit;
+        }
+        .timecode-row .tc-drift-suf {
+            color: #aeb6ca;
+            font-weight: 600;
+            font-size: inherit;
+        }
+        .timecode-row .tc-drift-num {
+            font-variant-numeric: tabular-nums;
+            font-family: 'Consolas', 'Monaco', 'Cascadia Mono', monospace;
+            letter-spacing: 0.06em;
+            font-size: inherit;
+        }
+        #driftRow.timecode-row {
+            font-size: 14px;
+        }
+        #playStopBtn {
+            box-sizing: border-box;
+            -webkit-appearance: none;
+            appearance: none;
+            margin: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 5.25rem;
+            min-width: 5.25rem;
+            max-width: 5.25rem;
+            height: var(--transport-seek-align-h);
+            min-height: var(--transport-seek-align-h);
+            max-height: var(--transport-seek-align-h);
+            padding-block: 0;
+            padding-inline: 8px;
+            line-height: 1;
+            background: linear-gradient(180deg, #ff9f40 0%, var(--accent-mid) 45%, #b85a10 100%);
+            color: #fff;
+            border: 1px solid var(--accent-border);
+            border-radius: 8px;
+            font-size: 0.75em;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(200, 90, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+            transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, filter 0.2s;
+        }
+        #playStopBtn:hover:not(:disabled) {
+            filter: brightness(1.08);
+        }
+        #playStopBtn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            filter: grayscale(0.35);
+            box-shadow: none;
+        }
+        #playStopBtn.transport-toggle--stop {
+            background: linear-gradient(180deg, #e02030 0%, #9a1020 100%);
+            border-color: rgba(255, 140, 150, 0.55);
+            box-shadow: 0 4px 16px rgba(180, 20, 40, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+        }
+        #playStopBtn.transport-toggle--stop:hover:not(:disabled) {
+            filter: brightness(1.1);
+        }
+
+        /** キーボード / シークバー操作のフィードバック（中央フラッシュ） */
+        .seek-flash-overlay {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+            transition:
+                opacity 0.82s ease-out,
+                visibility 0s linear 0.82s;
+        }
+        .seek-flash-overlay.seek-flash--visible {
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.2s ease-out, visibility 0s;
+        }
+        .seek-flash-overlay__box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.12em;
+            box-sizing: border-box;
+            padding: 0.45em 0.8em 0.52em;
+            background: rgba(255, 255, 255, 0.52);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: rgba(22, 24, 32, 0.88);
+            font-family: system-ui, -apple-system, 'Segoe UI', 'Hiragino Sans', sans-serif;
+            font-size: clamp(0.88rem, 2.8vmin, 1.28rem);
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            line-height: 1.2;
+            border-radius: 10px;
+            box-shadow: 0 4px 22px rgba(0, 0, 0, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            text-align: center;
+            max-width: min(88vw, 18em);
+        }
+        .seek-flash-overlay__primary {
+            font-size: 1.08em;
+            font-weight: 600;
+            color: rgba(18, 20, 28, 0.92);
+        }
+        .seek-flash-overlay__secondary {
+            font-size: 0.74em;
+            font-weight: 600;
+            letter-spacing: 0.07em;
+            color: rgba(32, 34, 44, 0.85);
+        }
+        .seek-flash-overlay__secondary[hidden] {
+            display: none !important;
+        }
+
+        .export-blocking-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 20000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            box-sizing: border-box;
+            background: rgba(6, 8, 12, 0.78);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            pointer-events: auto;
+            cursor: default;
+        }
+        .export-blocking-overlay[hidden] {
+            display: none !important;
+        }
+        .export-blocking-overlay__panel {
+            max-width: 28rem;
+            text-align: center;
+            padding: 28px 32px 30px;
+            border-radius: 14px;
+            background: linear-gradient(165deg, #2e2e38 0%, #1c1c24 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        }
+        .export-blocking-overlay__title {
+            margin: 0 0 10px;
+            font-size: 1.15rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            color: #f4f6fc;
+        }
+        .export-blocking-overlay__sub {
+            margin: 0;
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            color: #b8c4dc;
+            font-variant-numeric: tabular-nums;
+        }
+        .export-blocking-overlay__esc-hint {
+            margin: 0 0 12px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            line-height: 1.45;
+            letter-spacing: 0.03em;
+            color: #c8d4ec;
+        }
+        .export-blocking-overlay__esc-hint kbd {
+            display: inline-block;
+            padding: 0.1em 0.45em;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: rgba(0, 0, 0, 0.28);
+            font-family: inherit;
+            font-size: 0.95em;
+            font-weight: 700;
+        }
+
+        .solo-tc-notice-overlay {
+            z-index: 19500;
+        }
+        .solo-tc-notice-overlay .solo-tc-notice-body {
+            white-space: pre-line;
+            text-align: left;
+            line-height: 1.55;
+            max-width: 26rem;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .solo-tc-notice-ok-btn {
+            box-sizing: border-box;
+            -webkit-appearance: none;
+            appearance: none;
+            margin: 1.15rem 0 0;
+            padding: 0.42rem 1.35rem;
+            min-width: 5.5rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            background: linear-gradient(180deg, #4a5060 0%, #353842 48%, #282a34 100%);
+            color: #e8ecf4;
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        .solo-tc-notice-ok-btn:hover {
+            filter: brightness(1.06);
+        }
+        .solo-tc-notice-ok-btn:focus-visible {
+            outline: 2px solid var(--accent-glow);
+            outline-offset: 2px;
+        }
+
+        .transport-options-strip {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: stretch;
+            justify-content: center;
+            gap: 10px 12px;
+            width: 100%;
+            padding: 0;
+            border: none;
+            background: transparent;
+            box-sizing: border-box;
+        }
+        .transport-opt-box {
+            display: flex;
+            align-items: center;
+            flex: 0 1 auto;
+            width: fit-content;
+            max-width: 100%;
+            min-width: 0;
+            min-height: var(--transport-opt-box-min-h);
+            box-sizing: border-box;
+            padding: var(--transport-frame-pad-y) calc(var(--transport-frame-pad-x) + 4px);
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.28);
+            border: var(--transport-frame-border) solid rgba(255, 255, 255, 0.08);
+            font-size: var(--transport-opt-font-size);
+            transition: border-color 0.35s ease-out, box-shadow 0.35s ease-out;
+        }
+        @keyframes transportOptGlowPulse {
+            0% {
+                border-color: rgba(255, 255, 255, 0.08);
+                box-shadow: 0 0 0 0 rgba(255, 120, 40, 0);
+            }
+            28% {
+                border-color: rgba(255, 170, 90, 0.55);
+                box-shadow:
+                    0 0 0 1px rgba(255, 140, 60, 0.4),
+                    0 0 16px rgba(255, 130, 40, 0.55),
+                    0 0 28px rgba(255, 95, 20, 0.38);
+            }
+            100% {
+                border-color: rgba(255, 255, 255, 0.08);
+                box-shadow: 0 0 0 0 rgba(255, 120, 40, 0);
+            }
+        }
+        .transport-opt-box.transport-opt-box--glow {
+            animation: transportOptGlowPulse 0.88s ease-out forwards;
+        }
+        .export-pip-btn {
+            box-sizing: border-box;
+            -webkit-appearance: none;
+            appearance: none;
+            margin: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 4.75rem;
+            height: var(--transport-opt-control-h);
+            min-height: var(--transport-opt-control-h);
+            max-height: var(--transport-opt-control-h);
+            padding: 0 10px;
+            line-height: 1;
+            background: linear-gradient(180deg, #e82838 0%, #b01020 48%, #7a0814 100%);
+            color: #fff;
+            border: 1px solid rgba(255, 140, 150, 0.55);
+            border-radius: 8px;
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.03em;
+            white-space: nowrap;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(180, 20, 40, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+            transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, filter 0.2s;
+        }
+        .export-pip-btn:hover:not(:disabled) {
+            filter: brightness(1.08);
+        }
+        .export-pip-btn:disabled {
+            opacity: 0.48;
+            cursor: not-allowed;
+            filter: brightness(0.82) saturate(0.75);
+            box-shadow: none;
+        }
+        .transport-opt-cell--export {
+            flex-direction: row;
+            flex-wrap: nowrap;
+            align-items: center;
+            align-self: center;
+            gap: 6px 8px;
+            min-width: 0;
+            max-width: 100%;
+        }
+        .transport-opt-cell--export .transport-select--export {
+            flex: 0 1 auto;
+            min-width: 0;
+            max-width: 8.5rem;
+            padding: 0 8px;
+            font-size: 0.72rem;
+        }
+        .transport-opt-cell--export .transport-compact-lbl--export-tc span {
+            letter-spacing: 0.04em;
+        }
+        .transport-opt-box--export {
+            min-width: 0;
+            max-width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .transport-opt-cell {
+            display: flex;
+            align-items: center;
+            align-self: stretch;
+            gap: 8px;
+            min-width: 0;
+            min-height: 0;
+            flex: 0 1 auto;
+        }
+        .transport-opt-cell--view {
+            flex: 0 1 auto;
+            min-width: 0;
+            max-width: 100%;
+        }
+        .transport-compact-lbl {
+            flex-shrink: 0;
+            font-size: var(--transport-opt-font-size);
+            font-weight: 500;
+            letter-spacing: 0.06em;
+            color: #9aa6bc;
+            white-space: nowrap;
+        }
+        label[for="viewModeSelect"].transport-compact-lbl,
+        #audioModeLegend.transport-compact-lbl {
+            color: #f0f0f5;
+        }
+        .transport-compact-lbl--row {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            min-height: var(--transport-opt-control-h);
+            cursor: pointer;
+            font-size: var(--transport-opt-font-size);
+            font-weight: 500;
+            letter-spacing: 0.04em;
+            color: #d8e0f0;
+        }
+        .transport-compact-lbl--row input {
+            margin: 0;
+            flex-shrink: 0;
+        }
+        .transport-select {
+            flex: 0 1 auto;
+            min-width: 0;
+            max-width: min(100%, 20rem);
+            box-sizing: border-box;
+            height: var(--transport-opt-control-h);
+            min-height: var(--transport-opt-control-h);
+            margin: 0;
+            padding: 0 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(12, 14, 22, 0.92);
+            color: var(--accent-ink);
+            font-size: var(--transport-opt-font-size);
+            font-weight: 500;
+            line-height: var(--transport-opt-control-h);
+            cursor: pointer;
+            vertical-align: middle;
+        }
+        .transport-select option {
+            color: var(--accent-ink);
+            background: #14141a;
+        }
+        .transport-select:focus {
+            outline: 2px solid var(--accent-glow);
+            outline-offset: 1px;
+        }
+        input[type="radio"],
+        input[type="checkbox"] {
+            accent-color: var(--accent);
+        }
+        .transport-opt-cell--audio {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px 10px;
+            flex: 1 1 auto;
+            min-width: 0;
+            max-width: 100%;
+        }
+        .transport-opt-cell--audio .transport-compact-lbl {
+            flex-shrink: 0;
+        }
+        .transport-audio-inline {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 6px 10px;
+            flex: 1 1 auto;
+            min-width: 0;
+            row-gap: 6px;
+        }
+        .transport-audio-inline label {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            min-height: var(--transport-opt-control-h);
+            font-size: var(--transport-opt-font-size);
+            font-weight: 500;
+            line-height: 1.25;
+            color: #d0d8e8;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .transport-audio-inline input {
+            margin: 0;
+            flex-shrink: 0;
+        }
+
+        .app-doc-fold {
+            margin-top: 16px;
+            margin-left: auto;
+            margin-right: auto;
+            max-width: 1300px;
+            width: 100%;
+            box-sizing: border-box;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            background: linear-gradient(165deg, #32323c 0%, #1f1f26 42%, #26262f 100%);
+            overflow: hidden;
+        }
+        .app-doc-fold:not([open]) > .app-doc-fold__summary {
+            border-radius: 13px;
+        }
+        .app-doc-fold__summary {
+            margin: 0;
+            padding: 14px 18px;
+            cursor: pointer;
+            list-style: none;
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            color: #e8ecf2;
+            background: linear-gradient(165deg, #3a3c44 0%, #2a2c32 45%, #22242a 100%);
+            outline: none;
+            border-bottom: 1px solid transparent;
+        }
+        .app-doc-fold[open] > .app-doc-fold__summary {
+            border-bottom-color: rgba(0, 0, 0, 0.38);
+        }
+        .app-doc-fold__summary::-webkit-details-marker {
+            display: none;
+        }
+        .app-doc-fold__body {
+            margin: 10px 12px 14px;
+            padding: 14px 16px 16px;
+            border: 1px solid #4a4d52;
+            border-radius: 10px;
+            background: #242629;
+            box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.55);
+            color: var(--app-doc-text);
+            font-size: 0.82rem;
+            line-height: 1.5;
+        }
+        .app-doc-fold__body > p {
+            margin: 0 0 0.75em;
+        }
+        .app-doc-fold__body > p:last-child {
+            margin-bottom: 0;
+        }
+        .app-manual {
+            margin-top: 0;
+            padding: 0;
+            background: transparent;
+            border-radius: 0;
+            border: none;
+            box-shadow: none;
+            color: inherit;
+            font-size: inherit;
+            line-height: inherit;
+        }
+        .app-manual h3 {
+            margin: 0 0 10px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--app-accent);
+            letter-spacing: 0.02em;
+        }
+        .app-manual h3:not(:first-of-type) {
+            margin-top: 1.15rem;
+        }
+        .app-manual ul {
+            margin: 0;
+            padding-left: 1.25rem;
+            list-style-position: outside;
+            list-style-type: disc;
+        }
+        .app-manual ol {
+            margin: 0;
+            padding-left: 1.25rem;
+            list-style-position: outside;
+            list-style-type: decimal;
+        }
+        .app-manual li {
+            margin-bottom: 0.45em;
+        }
+        .app-manual li:last-child {
+            margin-bottom: 0;
+        }
+
+        .app-manual h4 {
+            margin: 1.1rem 0 0.5rem;
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--app-accent);
+        }
+        .app-manual h4:first-of-type {
+            margin-top: 0.85rem;
+        }
+
+        .app-manual-category + .app-manual-category {
+            margin-top: 1rem;
+        }
+        .app-manual-category h4 {
+            margin: 0 0 0.45rem;
+            font-size: 0.88rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            color: var(--app-accent);
+        }
+        .app-manual-category ul {
+            margin: 0;
+        }
+        .app-manual-category li {
+            margin-bottom: 0.45em;
+        }
+        .app-manual-category li:last-child {
+            margin-bottom: 0;
+        }
+        .app-manual code {
+            font-size: 0.92em;
+            color: inherit;
+        }
+        .app-doc-fold__body a,
+        .app-manual a {
+            color: var(--app-accent);
+            text-decoration: none;
+        }
+        .app-doc-fold__body a:hover,
+        .app-manual a:hover {
+            text-decoration: underline;
+        }
+
+        .app-site-footer {
+            margin-top: 22px;
+            margin-bottom: 10px;
+            padding: 12px 14px 14px;
+            text-align: center;
+            max-width: 52rem;
+            margin-left: auto;
+            margin-right: auto;
+            color: #8a92a4;
+            font-size: 0.78rem;
+            line-height: 1.65;
+        }
+        .app-site-footer__copyright {
+            margin: 0;
+            font-size: 0.82rem;
+            color: #9aa4b8;
+            font-weight: 600;
+        }
+        .app-site-footer__copyright a {
+            color: var(--app-accent);
+            text-decoration: none;
+        }
+        .app-site-footer__copyright a:hover {
+            text-decoration: underline;
+        }
+
+        .bottom-info {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            align-items: flex-start;
+            width: 100%;
+        }
+        #log {
+            flex: 1 1 50%;
+            min-width: 0;
+            max-width: none;
+            box-sizing: border-box;
+            min-height: 120px;
+            resize: none;
+            overflow-x: hidden;
+            overflow-y: scroll;
+            flex-shrink: 1;
+            background: #242629;
+            color: #f0f0f5;
+            padding: 10px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 11px;
+            scrollbar-gutter: stable;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(200, 210, 230, 0.45) rgba(0, 0, 0, 0.35);
+            border-radius: 4px;
+            border: 1px solid #4a4d52;
+            box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.55);
+        }
+        #log::-webkit-scrollbar {
+            width: 10px;
+        }
+        #log::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.35);
+            border-radius: 4px;
+        }
+        #log::-webkit-scrollbar-thumb {
+            background: rgba(200, 210, 230, 0.38);
+            border-radius: 5px;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+        }
+        #log::-webkit-scrollbar-thumb:hover {
+            background: rgba(220, 228, 245, 0.5);
+            background-clip: padding-box;
+        }
+        .shortcut-guide {
+            flex: 1 1 50%;
+            min-width: 0;
+            overflow-x: hidden;
+            background: linear-gradient(165deg, #32323c 0%, #1f1f26 42%, #26262f 100%);
+            border-radius: 14px;
+            padding: 14px 16px 22px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            font-family: 'Consolas', 'Courier New', Courier, monospace;
+            font-size: 11px;
+            color: var(--app-shortcut-text);
+            line-height: 1.5;
+        }
+        .shortcut-sheet {
+            display: grid;
+            grid-template-columns: max-content minmax(0, 1fr);
+            column-gap: 12px;
+            align-items: start;
+        }
+        .shortcut-sheet__cat {
+            padding: 9px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            font-weight: 700;
+            line-height: 1.45;
+            white-space: nowrap;
+            color: var(--app-shortcut-col1);
+        }
+        .shortcut-sheet__items {
+            padding: 9px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            min-width: 0;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 5px 12px;
+            line-height: 1.45;
+        }
+        .shortcut-sheet > .shortcut-sheet__cat:nth-last-child(2),
+        .shortcut-sheet > .shortcut-sheet__items:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .shortcut-sheet__chip {
+            white-space: nowrap;
+            font-size: 10.5px;
+            letter-spacing: 0.01em;
+        }
+        .shortcut-guide__title {
+            color: var(--app-shortcut-heading);
+            display: block;
+            margin-bottom: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+        }
+        @media (max-width: 900px) {
+            .bottom-info {
+                flex-direction: column;
+            }
+            #log {
+                flex: 1 1 auto;
+                max-width: none;
+                width: 100%;
+            }
+            .shortcut-guide {
+                flex: 1 1 auto;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="seekFlashOverlay" class="seek-flash-overlay" aria-hidden="true">
+        <div class="seek-flash-overlay__box">
+            <span class="seek-flash-overlay__primary" id="seekFlashPrimary"></span>
+            <span class="seek-flash-overlay__secondary" id="seekFlashSecondary" hidden></span>
+        </div>
+    </div>
+
+    <div
+        id="exportBlockingOverlay"
+        class="export-blocking-overlay"
+        hidden
+        aria-hidden="true"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="exportBlockingTitle"
+        tabindex="-1"
+    >
+        <div class="export-blocking-overlay__panel">
+            <p class="export-blocking-overlay__title" id="exportBlockingTitle">Exporting</p>
+            <p class="export-blocking-overlay__esc-hint" id="exportBlockingEscHint">
+                操作はロックされています。<kbd>Esc</kbd> キーで書き出しをキャンセルできます。
+            </p>
+            <p class="export-blocking-overlay__sub" id="exportBlockingSub"></p>
+        </div>
+    </div>
+
+    <div
+        id="soloTcNoticeOverlay"
+        class="export-blocking-overlay solo-tc-notice-overlay"
+        hidden
+        aria-hidden="true"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="soloTcNoticeTitle"
+    >
+        <div class="export-blocking-overlay__panel">
+            <p class="export-blocking-overlay__title" id="soloTcNoticeTitle">With TC</p>
+            <p class="export-blocking-overlay__sub solo-tc-notice-body" id="soloTcNoticeBody">
+                Older only / Newer only のエクスポートでは、タイムコード（With TC）の焼き込みが必須です。
+
+                元動画のみをそのまま取得する用途は想定していないため、オフにしても意味がなく、チェックはすぐオンに戻ります。
+            </p>
+            <button type="button" class="solo-tc-notice-ok-btn" id="soloTcNoticeOk">OK</button>
+        </div>
+    </div>
+
+    <div class="layout-narrow">
+    <header class="app-header">
+        <div class="app-header-inner">
+            <h2 class="app-title">MGA Movie Compare Player</h2>
+            <span class="version-badge">v1.0</span>
+        </div>
+    </header>
+
+    <div id="main-drop-zone" tabindex="0" role="button" aria-label="動画ファイルをドロップして読み込み">
+        <strong class="drop-zone-title">比較したい動画を２つ、ここまたは下の映像エリアにドロップ（またはクリックで選択）</strong>
+        <p class="drop-zone-note">対応形式は<strong>ブラウザが再生できる動画</strong>（例: MP4 / WebM / MOV など）です。環境によっては再生できないものがあります。</p>
+        <p class="drop-zone-note"><strong>左右の割り当て</strong>は OS が付与する<strong>ファイルの最終更新日時</strong>で判定し、<strong>古い方を左・新しい方を右</strong>に並べます。同一時刻のときはファイル名順です。<strong>１つずつ</strong>読み込んだあと２つそろった時点でも並べ替えます。</p>
+        <p class="drop-zone-note">動画は<strong>このブラウザ内でのみ</strong>デコード・再生され、サーバーには<strong>アップロードされません</strong>。</p>
+        </div>
+
+    </div>
+
+    <div class="compare-stage" id="compareStage">
+        <div class="compare-grid" id="compareGrid">
+            <div class="video-panel" id="panelLeft" data-side="left">
+                <p class="video-panel-label">Older</p>
+                <span class="file-name" id="nameLeft">Not Loaded</span>
+                <p class="panel-info-line" id="infoLeft" hidden></p>
+                <div class="video-frame" id="frameLeft">
+                    <video id="videoLeft" playsinline preload="metadata"></video>
+                    <div class="video-timecode video-timecode--idle" id="timecodeOverlayLeft" aria-hidden="true">00:00:00:00</div>
+                </div>
+            </div>
+            <div class="video-panel" id="panelRight" data-side="right">
+                <p class="video-panel-label">Newer</p>
+                <span class="file-name" id="nameRight">Not Loaded</span>
+                <p class="panel-info-line" id="infoRight" hidden></p>
+                <div class="video-frame" id="frameRight">
+                    <video id="videoRight" playsinline preload="metadata"></video>
+                    <div class="video-timecode video-timecode--idle" id="timecodeOverlayRight" aria-hidden="true">00:00:00:00</div>
+                </div>
+            </div>
+        </div>
+        <div class="compare-composite" id="compareComposite" hidden>
+            <div class="video-panel video-panel--composite" id="panelComposite">
+                <div class="video-frame video-frame--stack" id="frameStack">
+                    <div class="video-timecode video-timecode--idle" id="timecodeOverlayStack" aria-hidden="true">00:00:00:00</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="layout-narrow">
+    <div class="transport-bar">
+            <div class="transport-row-seek">
+                <div class="seek-container">
+                    <span class="time-display" id="currentTime">00:00:00:00</span>
+                    <div class="seek-bar-wrap" id="seekBarWrap">
+                        <div class="seek-bar-track-bg" aria-hidden="true"></div>
+                        <input type="range" id="seekBar" min="0" max="100" step="0.016666666666666666" value="0" disabled>
+                    </div>
+                    <span class="time-display" id="totalTime">00:00:00:00</span>
+                </div>
+                <button type="button" id="playStopBtn" disabled>Play</button>
+            </div>
+            <div class="timecode-row" id="driftRow" hidden>
+                <span id="driftLine">
+                    <span class="tc-side">Playback Drift</span><span class="tc-side"> - </span>
+                    <span class="tc-drift-num" id="driftMs">0000</span><span class="tc-drift-suf"> ms</span>
+                    <span class="tc-side"> / </span>
+                    <span class="tc-drift-num" id="driftFrames">0000</span><span class="tc-drift-suf"> f</span>
+                </span>
+            </div>
+            <div class="transport-options-strip">
+                <div class="transport-opt-box transport-opt-box--view">
+                    <div class="transport-opt-cell transport-opt-cell--view">
+                        <label for="viewModeSelect" class="transport-compact-lbl">Video</label>
+                        <select id="viewModeSelect" class="transport-select" aria-label="Video layout">
+                            <option value="side-by-side" selected>Side by Side</option>
+                            <option value="stack-diff">Difference</option>
+                            <option value="stack-cross">Overlay</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="transport-opt-box transport-opt-box--loop">
+                    <div class="transport-opt-cell">
+                        <label class="transport-compact-lbl transport-compact-lbl--row">
+                            <input type="checkbox" id="loopPlaybackCheckbox" checked>
+                            <span>Loop</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="transport-opt-box transport-opt-box--audio">
+                    <div class="transport-opt-cell transport-opt-cell--audio" role="group" aria-labelledby="audioModeLegend">
+                        <span id="audioModeLegend" class="transport-compact-lbl">Audio</span>
+                        <div class="transport-audio-inline">
+                            <label>
+                                <input type="radio" name="audioMode" value="split-mono" checked>
+                                <span>Both</span>
+                            </label>
+                            <label>
+                                <input type="radio" name="audioMode" value="old-stereo">
+                                <span>Older Only</span>
+                            </label>
+                            <label>
+                                <input type="radio" name="audioMode" value="new-stereo">
+                                <span>Newer Only</span>
+                            </label>
+                            <label>
+                                <input type="radio" name="audioMode" value="mute">
+                                <span>Mute</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="transport-opt-box transport-opt-box--export">
+                    <div class="transport-opt-cell transport-opt-cell--export">
+                        <span class="transport-compact-lbl" id="exportPipLegend">Export</span>
+                        <select
+                            id="exportModeSelect"
+                            class="transport-select transport-select--export"
+                            aria-label="Export mode"
+                        >
+                            <option value="compare-pip" selected>Compare (PiP)</option>
+                            <option value="solo-old">Older only</option>
+                            <option value="solo-new">Newer only</option>
+                        </select>
+                        <label class="transport-compact-lbl transport-compact-lbl--row transport-compact-lbl--export-tc">
+                            <input type="checkbox" id="exportBurnTcCheckbox" />
+                            <span>With TC</span>
+                        </label>
+                        <button type="button" id="exportPipBtn" class="export-pip-btn" disabled>
+                            Exp WebM
+                        </button>
+                    </div>
+                </div>
+            </div>
+    </div>
+
+    <div class="bottom-info">
+        <div id="log">&gt; Idle (v1.0)</div>
+        <div class="shortcut-guide">
+            <strong>キーボードショートカット</strong>
+            <div class="shortcut-sheet" aria-label="キーボードショートカット一覧">
+                <div class="shortcut-sheet__cat">Playback</div>
+                <div class="shortcut-sheet__items">
+                    <span class="shortcut-sheet__chip">Play/Stop [Space]</span>
+                    <span class="shortcut-sheet__chip">Loop On/Off [L]</span>
+                </div>
+                <div class="shortcut-sheet__cat">Seek</div>
+                <div class="shortcut-sheet__items">
+                    <span class="shortcut-sheet__chip">1f [←] [→]</span>
+                    <span class="shortcut-sheet__chip">1s [Sft+←] [Sft+→]</span>
+                    <span class="shortcut-sheet__chip">5s [Ctl+←] [Ctl+→]</span>
+                    <span class="shortcut-sheet__chip">10s [Ctl+Sft+←] [Ctl+Sft+→]</span>
+                </div>
+                <div class="shortcut-sheet__cat">Jump</div>
+                <div class="shortcut-sheet__items">
+                    <span class="shortcut-sheet__chip">0% [Numpad 0] ~ 90% [Numpad 9]</span>
+                </div>
+                <div class="shortcut-sheet__cat">Audio</div>
+                <div class="shortcut-sheet__items">
+                    <span class="shortcut-sheet__chip">Both [B]</span>
+                    <span class="shortcut-sheet__chip">Older Only [O]</span>
+                    <span class="shortcut-sheet__chip">Newer Only [N]</span>
+                    <span class="shortcut-sheet__chip">Mute [M]</span>
+                </div>
+                <div class="shortcut-sheet__cat">Video</div>
+                <div class="shortcut-sheet__items">
+                    <span class="shortcut-sheet__chip">cycles: Side by Side → Difference → Overlay [V]</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <details class="app-doc-fold">
+        <summary class="app-doc-fold__summary" id="app-manual-notice-heading">特記事項</summary>
+        <div class="app-doc-fold__body app-manual">
+            <ul>
+                <li>本ページは無償で提供される実験的なウェブアプリです。不具合を常時監視しておらず、ご利用中に問題が生じても原則として把握いたしません。あらかじめご了承のうえご利用ください。</li>
+                <li>このページの HTML・CSS・JavaScript は目的を問わず自由に改変・複製・再利用して構いません（商用・社内ツールを含みます）。連絡も不要です。独自版を公開・配布する場合、フッターのコピーライト表記とリンクは削除しても構いません（未改変の配布では残すことを推奨しますが、フォークや大幅なカスタマイズでは必須ではありません）。</li>
+                <li>本アプリは単一の HTML ファイルのみで構成されており、別途 CSS / JavaScript ファイルを用意したりビルドしたりする必要はありません。ブラウザで表示したうえで、お使いの PC に自由に保存して構いません。保存したファイルをダブルクリックするか、ブラウザにドラッグ＆ドロップして開けば、オフラインでも同様に利用できます（favicon 等の外部 CDN 参照は環境により取得できない場合があります）。</li>
+                <li>動画はこのブラウザ内でのみデコード・再生され、サーバーへアップロードされることはありません。Google Chrome の利用を推奨します。ブラウザや形式によってはデコードできないことがあります。</li>
+                <li>ディスク上の元ファイルを書き出し直した場合でも、本アプリは自動では再読み込みしません。更新した動画を反映するには、ドロップゾーンまたは映像エリアへ再度ドロップしてください。前回セッションの復元は IndexedDB に保存されたコピーを参照します（元ファイルパスは保持しません）。ブラウザのストレージ整理により IndexedDB が消えると、保存されたセッションは復元できません。</li>
+                <li>映像レイアウト・ループ・音声、シーク位置、Export 欄（モード・With TC）などの UI 設定は <code>localStorage</code>（キー <code>mp4_compare_prefs_v1</code>）に JSON で保存され、次回開いたときに復元されます。読み込んだ動画データのコピーは <code>IndexedDB</code>（データベース名 <code>mp4_compare_session_v1</code>）に保存されます。キー名や既定値を変える場合は「ソースコードを改変する場合」を参照してください。</li>
+                <li>書き出しファイルはブラウザ標準の WebM です。MP4 / MJPEG 等への変換や色の扱いは「使い方」の「書き出し（Exp WebM）とファイルについて」を参照してください。</li>
+            </ul>
+        </div>
+    </details>
+
+    <details class="app-doc-fold">
+        <summary class="app-doc-fold__summary" id="app-manual-heading">使い方</summary>
+        <div class="app-doc-fold__body app-manual">
+            <section class="app-manual-category" aria-labelledby="manual-flow-heading">
+                <h4 id="manual-flow-heading">はじめに（操作の流れ）</h4>
+                <ol>
+                    <li>
+                        画面上部のドロップゾーン（または各映像エリア）へ動画をドロップするか、ゾーンをクリックしてファイルを選びます。２本まとめて選ぶと更新日時で左＝古い・右＝新しいと並べます（詳細は次節）。
+                    </li>
+                    <li>
+                        トランスポートの Video で Side by Side / Difference / Overlay、Loop で終端後のループ有無、Audio で Both / Older Only / Newer Only / Mute を選びます。
+                    </li>
+                    <li>
+                        Play / Pause とシークバー、またはキーボード（ページ中段のショートカット一覧）で再生位置を調整します。動画の同期ズレは Playback Drift 行で確認できます。
+                    </li>
+                    <li>
+                        トランスポート最下行の Export でモードと With TC を選び、Exp WebM でブラウザ内録画の WebM をダウンロードします。書き出し中のオーバレイや <kbd>Esc</kbd> キャンセル、出力ファイルの扱いは「書き出し（Exp WebM）とファイルについて」を参照してください。
+                    </li>
+                </ol>
+            </section>
+            <section class="app-manual-category" aria-labelledby="manual-load-heading">
+                <h4 id="manual-load-heading">動画の読み込みと左右の割り当て</h4>
+                <ul>
+                    <li>
+                        画面上部のドロップゾーンをクリックすると、ファイル選択が開きます。ここへ、またはページ上のほかの領域へドラッグ＆ドロップしても読み込めます（動画として扱えるファイルだけが対象です）。
+                    </li>
+                    <li>
+                        動画を２本まとめて選ぶ / ドロップした場合は、OS の最終更新日時が古いほうを左、新しいほうを右に並べます。同一時刻のときはファイル名順です。
+                    </li>
+                    <li>
+                        １本ずつ読み込む場合は、空いている側（先に左、次に右）へ順に入ります。すでに左右がそろったあとに別ファイルを１本だけ追加すると、左だけ差し替えされ、右は未読み込みに戻ります。
+                    </li>
+                    <li>
+                        セッションの自動復元や IndexedDB については「特記事項」を参照してください。
+                    </li>
+                </ul>
+            </section>
+            <section class="app-manual-category" aria-labelledby="manual-panel-tc-heading">
+                <h4 id="manual-panel-tc-heading">パネル情報・タイムコード・FPS</h4>
+                <ul>
+                    <li>
+                        各パネル直下の補足行には、最終更新日時、コンテナから読めたときの FPS、および尺が分かるときの総フレーム数（<code>Total: … f</code>）が出ます。FPS が取れない形式では <code>FPS n/a (~60 est.)</code> のように参考表示になります。
+                    </li>
+                    <li>
+                        MP4 など ISO ベースのコンテナでは、先頭付近の <code>moov</code> / <code>stts</code> 等から推定した平均フレームレートを FPS に使います。
+                    </li>
+                    <li>
+                        各パネル映像の隅のオーバーレイは、その側の FPS に合わせた HH:MM:SS:FF です。
+                    </li>
+                    <li>
+                        トランスポートの現在 / 総尺のタイムコード、キーボードのフレーム送り、および重ねビュー中央のタイムコードは、左右の表示 FPS の大きい方を整数化したマスター FPS に基づきます。
+                    </li>
+                </ul>
+            </section>
+            <section class="app-manual-category" aria-labelledby="manual-transport-heading">
+                <h4 id="manual-transport-heading">トランスポート（再生・シーク・各オプション）</h4>
+                <ul>
+                    <li>
+                        トランスポート最下行の Export 欄では、プルダウンで書き出しモード（Compare PiP / Older only / Newer only）を選び、With TC で Compare 時のみタイムコードの左下焼き込みのオン・オフを切り替えます（Older / Newer のみでは焼き込み必須のため、オフにすると説明オーバレイが出てチェックはすぐオンに戻ります。閉じ方は OK・外側クリック・Esc）。Exp WebM を押すと、Audio 行で選んだモードに応じた音声をミックスした WebM を録画します（Mute 選択時や Web Audio が使えない場合は映像のみ）。Both ミックスで書き出すときは左右のデコードが必要なため、片側エクスポートでも両方のファイルが読み込まれている必要があります。Compare 書き出しは左右そろっている必要があります。書き出し中は画面中央にオーバレイが出て操作がロックされ、Esc でキャンセルできる旨と進捗が表示されます。尺ぶんリアルタイムで進みます。出力形式の注意や MP4 / MJPEG への変換は「書き出し（Exp WebM）とファイルについて」を参照してください。Chrome 系の利用を推奨します。
+                    </li>
+                    <li>
+                        映像の下にあるトランスポート枠は、画面上から現在 / 総尺のタイムコード → シークバーと Play / Pause → Playback Drift →（１行下のオプション条）Video → Loop → Audio → Export の順で並んでいます。オプション条の詳細は、このあとの見出しどおりです。
+                    </li>
+                    <li>
+                        シークバーの最大値（総尺）は、左右のうち長い方の duration に合わせます。表示中の現在位置は、両要素の <code>currentTime</code> の遅い方（大きい方）に合わせて更新されます。
+                    </li>
+                    <li>
+                        シークバーをドラッグしている間は、その値に応じて両方の動画へ同時にシークします。離したあと、再生中であれば更新ループが続きます。
+                    </li>
+                </ul>
+            </section>
+            <section class="app-manual-category" aria-labelledby="manual-sync-heading">
+                <h4 id="manual-sync-heading">同期、Playback Drift、自動補正</h4>
+                <ul>
+                    <li>
+                        同期の意味：シークや再生では、原則として両方の <code>currentTime</code> を同じ目標値に揃えます。デコードと描画はブラウザ任せのため、報告値がフレーム単位で常に一致するとは限りません。
+                    </li>
+                    <li>
+                        トランスポートの Playback Drift 行は、左右の <code>currentTime</code> の差をミリ秒とマスター FPS 換算のフレーム数で示します。色分けは目安で、０に近いほど緑系、大きいほど赤系になります。いずれかが <code>ended</code> のときは <code>----</code> 表示になります。
+                    </li>
+                    <li>
+                        再生中にズレが約 100ms を超えた場合、短いクールダウンを挟みつつ、両方をマスター側の時刻に合わせて約１フレーム分だけ前進させる自動補正が入ります。尺の短い側が終端に張り付き、長い側だけが進んでいるときの差は「同期不良」とみなさず、補正しません。
+                    </li>
+                    <li>
+                        補正が走ると、ログに <code>Sync auto-correct: …</code> が間欠的に残ります。
+                    </li>
+                    <li>
+                        Video の Difference モードでは、重ねた２本の画素が一致している領域は差分がゼロとなり、画面は真っ黒に見えます。変化や不一致がある箇所だけが、差分として色付きで浮かび上がります。この見え方は「同一時刻の同じフレーム同士」を重ねている前提に強く依存するため、同期がわずかにでもズレていると、実質同じ内容でも前後のフレーム差として広く差分が出て、Difference の見え方が大きく変わります。Playback Drift の表示や自動補正は、そのズレを抑え、差分表示を読みやすく保つための目安・調整です。
+                    </li>
+                </ul>
+            </section>
+            <section class="app-manual-category" aria-labelledby="manual-view-heading">
+                <h4 id="manual-view-heading">映像レイアウト（Video）</h4>
+                <ul>
+                    <li>
+                        トランスポート内の Video プルダウン、または [V] で、次の３モードだけをこの順に循環します。Side by Side（左右並び）→ Difference（差分重ね）→ Overlay（新しい側を上に、不透明度およそ 75% で重ねる）→ 先頭へ戻る、の繰り返しです。プルダウンの値と [V] は常に連動します。
+                    </li>
+                    <li>
+                        Side by Side：左が古い動画、右が新しい動画の２パネル表示（既定）。ファイル名・補足行・隅のタイムコードの意味は、上の「パネル情報・タイムコード・FPS」と同じです。
+                    </li>
+                    <li>
+                        Difference / Overlay：同一タイムライン上の２本を１画面に重ねます。下が左（古い方）、上が右（新しい方）です。Difference は CSS の <code>mix-blend-mode: difference</code>、Overlay は上層（新しい側）に <code>opacity: 0.75</code>（およそ 75% 不透明）を当てたうえで通常合成し、下の画との差を見やすくします。左右パネルは隠れ、合成ビューだけが表示されます。
+                    </li>
+                    <li>
+                        重ねモードでは、オーバーレイのタイムコードはトランスポートと同じマスター FPS（上記「パネル情報」）で、Side by Side 時より大きめの字体です。レイアウト切り替えは再生中でも可で、通常は再生が継続します。
+                    </li>
+                    <li>
+                        差分はブラウザの合成に依存するため、圧縮ノイズ・解像度差・トリミングのズレがあると、実質同じ内容でも差が広がって見えることがあります。
+                    </li>
+                </ul>
+            </section>
+            <section class="app-manual-category" aria-labelledby="manual-loop-heading">
+                <h4 id="manual-loop-heading">ループ再生（Loop）</h4>
+                <ul>
+                    <li>
+                        Loop にチェックが入っているとき（既定）：長い方の尺の終端に達すると、両方の再生位置を先頭付近へ戻し、再生を継続します（各 <code>video</code> 要素の <code>loop</code> 属性ではなく、アプリ側で両者を揃えて再開しています）。
+                    </li>
+                    <li>
+                        チェックを外したとき：終端で一時停止し、トランスポートが止まります。
+                    </li>
+                    <li>
+                        On / Off はトランスポートのチェックボックスか [L] です。
+                    </li>
+                </ul>
+            </section>
+            <section class="app-manual-category" aria-labelledby="manual-audio-heading">
+                <h4 id="manual-audio-heading">音声出力（Audio）</h4>
+                <ul>
+                    <li>
+                        トランスポートのラジオボタン、または [B] / [O] / [N] / [M] で切り替えます。ログや一時ヒントには、内部的な説明付きで Both (Mono + Pan)、Older Only (Stereo)、Newer Only (Stereo)、Mute と出ることがありますが、UI ラベルは Both、Older Only、Newer Only、Mute です。
+                    </li>
+                    <li>
+                        Both：各動画の L/R を 0.5 倍して足し合わせてモノラル化し、古い方を L、新しい方を R にパンして出力します。
+                    </li>
+                    <li>
+                        Older Only：左（古い方）のステレオをそのまま L/R に出力します。
+                    </li>
+                    <li>
+                        Newer Only：右（新しい方）のステレオをそのまま L/R に出力します。
+                    </li>
+                    <li>
+                        Mute：無音です。WebM 書き出し時も音声トラックは付けず映像のみになります。
+                    </li>
+                </ul>
+            </section>
+            <section class="app-manual-category" aria-labelledby="manual-export-file-heading">
+                <h4 id="manual-export-file-heading">書き出し（Exp WebM）とファイルについて</h4>
+                <ul>
+                    <li>
+                        本アプリの Exp WebM は、ブラウザの <code>MediaRecorder</code> と <code>canvas.captureStream</code>、および Web Audio で得た音声（Mute 時は映像のみ）を組み合わせて、WebM（主に VP8 / VP9 系＋必要に応じて Opus）をその場で生成しダウンロードします。編集・納品の現場では MP4（H.264 等）や MJPEG など別形式に慣れている方も多く、WebM 単体では馴染みが薄い形式かもしれません。
+                    </li>
+                    <li>
+                        MP4 や MJPEG など別コンテナへ変換したい場合は、お手数ですがご利用の OS 向けの動画変換ツールやエンコーダを別途ご用意ください。本ページはサーバーにアップロードせずブラウザ内だけで完結するアプリであり、ブラウザが直接書き出せる形式に出力が限られることは仕様です。一般的な編集ソフトのプリセットだけではなく、想定ワークフローに合わせて変換段階を設けていただく必要があり、ご不便をおかけしますことお詫び申し上げます。
+                    </li>
+                    <li>
+                        WebM を他形式へ再エンコードするとき、色空間・ガンマ・レンジ（limited / full 等）の扱いをツール側で誤ると、結果が意図より暗くなったりコントラストがずれたりすることがあります。変換プリセットや「色の管理」「レンジ」の項目は、利用するソフトのマニュアルで確認してください。
+                    </li>
+                </ul>
+            </section>
+            <section class="app-manual-category" aria-labelledby="manual-hint-heading">
+                <h4 id="manual-hint-heading">シーク・操作の画面上ヒント</h4>
+                <ul>
+                    <li>
+                        矢印キーやテンキーのジャンプ、レイアウト / 音声 / ループの変更などのあと、画面上部に短いテキストのフラッシュが出ることがあります。ログとあわせて、直近の操作内容の確認に使えます。
+                    </li>
+                </ul>
+            </section>
+            <section class="app-manual-category" aria-labelledby="manual-keys-heading">
+                <h4 id="manual-keys-heading">キーボードショートカット</h4>
+                <ul>
+                    <li>
+                        再生・シーク・音声・レイアウト・ループなどにショートカットがあります。内容はページ中段の一覧どおりです。
+                    </li>
+                    <li>
+                        無効になるフォーカス：<code>textarea</code>、<code>select</code>（Video のプルダウン含む）、<code>input</code> のうちシークバー（<code>type="range"</code>）以外、ならびに contenteditable 要素にフォーカスがある間は、ショートカットは処理されません。シークバーにフォーカスがある場合は、主要なショートカットキーを押すとフォーカスが外れてから処理されます。
+                    </li>
+                    <li>
+                        矢印キーは連打リピート時もシークに使えます。その他の多くのキーはリピートを無視します。
+                    </li>
+                </ul>
+            </section>
+        </div>
+    </details>
+
+    <details class="app-doc-fold">
+        <summary class="app-doc-fold__summary" id="app-manual-version-heading">バージョン情報</summary>
+        <div class="app-doc-fold__body app-manual">
+            <h3>v1.0 - 2026年5月14日</h3>
+            <ul>
+                <li>初稿（初版リリース）</li>
+            </ul>
+        </div>
+    </details>
+
+    <details class="app-doc-fold">
+        <summary class="app-doc-fold__summary" id="app-manual-source-heading">ソースコードを改変する場合</summary>
+        <div class="app-doc-fold__body app-manual">
+            <h3>ソースの読み方と、ブラウザへの保存（キーとフィールド）</h3>
+            <ul>
+                <li>スクリプト先頭（<code>&lt;script&gt;</code> 直後の IIFE 内）に、読み順と改造しやすい定数・関数の目安をまとめたブロックコメントがあります。大きな処理は <code>// === 数字.</code> で始まる区切りコメントでブロック化してあるので、エディタで <code>===</code> を検索するとたどれます。映像レイアウト・ループ・音声の UI はトランスポート付近の HTML と、同ファイル末尾の <code>&lt;script&gt;</code> 内の状態・イベント処理が中心です。</li>
+                <li>ここでいう「保存」は、タブやブラウザを閉じたあとも端末内のブラウザ領域に残し、次にこのページを開いたときに読み戻す、という意味です。サーバーへ送る処理はありません。小さな UI 状態は <code>localStorage</code>、動画ファイルのコピーは容量の大きい <code>IndexedDB</code> に分かれています（下記）。</li>
+                <li><code>localStorage</code>（キー定数 <code>LS_PREFS_KEY</code>、既定 <code>mp4_compare_prefs_v1</code>）: <code>writePrefs</code> が JSON １本で書き込みます。フィールドは <code>audioMode</code>（<code>split-mono</code> / <code>old-stereo</code> / <code>new-stereo</code> / <code>mute</code>）、<code>transportTime</code>（シーク位置・秒）、<code>viewMode</code>、<code>loopPlayback</code>、<code>exportMode</code>（<code>compare-pip</code> / <code>solo-old</code> / <code>solo-new</code>）、<code>exportBurnTc</code>（真偽）です。読み出しは <code>readPrefs</code>、起動直後の反映は <code>initPrefsFromStorage</code> です。IndexedDB へセッションを書く直前にも <code>writePrefs</code> が呼ばれます。キー文字列を変えると、以前の保存とは別レコードとして扱われます。</li>
+                <li><code>IndexedDB</code>（データベース名 <code>IDB_NAME</code>、既定 <code>mp4_compare_session_v1</code>、バージョン <code>IDB_VER</code>）: オブジェクトストアは <code>IDB_STORE</code>（既定 <code>kv</code>）の１つだけで、最後に保存したセッションはキー <code>IDB_KEY_LAST</code>（既定 <code>lastSession</code>）に <code>put</code> されます（<code>schedulePersistSession</code> → <code>persistSessionToStorage</code>）。値は <code>v: 1</code> と、左右にファイルがあれば <code>lName</code> / <code>lm</code> / <code>lBlob</code>、<code>rName</code> / <code>rm</code> / <code>rBlob</code>、あわせて <code>audioMode</code> / <code>transportTime</code> / <code>viewMode</code> / <code>loopPlayback</code> を含みます。書き出し欄の <code>exportMode</code> / <code>exportBurnTc</code> はこのレコードには含めず、上記 <code>localStorage</code> のみです。左右とも動画が空の状態で保存しようとすると <code>IDB_KEY_LAST</code> は削除されます。ストアの形を変えるときは <code>IDB_VER</code> を上げ、<code>openIdb</code> 内の <code>onupgradeneeded</code> でストア作成に対応してください。</li>
+                <li>オプションの「映像」「ループ」「音声」「Export」をそれぞれ別ブロックとして発行・埋め込みしたい場合は、HTML の <code>transport-opt-box--view</code> / <code>transport-opt-box--loop</code> / <code>transport-opt-box--audio</code> / <code>transport-opt-box--export</code> を起点に分割すると追いやすいです。関連する要素 ID（<code>viewModeSelect</code>、<code>loopPlaybackCheckbox</code>、<code>audioMode</code> ラジオ群、<code>exportModeSelect</code>、<code>exportBurnTcCheckbox</code>、<code>exportPipBtn</code>、<code>exportBlockingOverlay</code>、<code>exportBlockingSub</code>、<code>exportBlockingEscHint</code>、<code>soloTcNoticeOverlay</code>、<code>soloTcNoticeOk</code>）はスクリプトから参照されているため、ID を変える場合はスクリプト側も合わせて更新してください。</li>
+            </ul>
+            <h3>WebM 書き出しを改変する場合</h3>
+            <ul>
+                <li>録画の核は <code>runSilentWebmExport</code>（<code>pipExportCanvas.captureStream</code>、<code>MediaRecorder</code>、<code>pickWebMRecorderMimeType(withAudio)</code>）です。書き出し中は <code>pipExportActive</code> が真になり、<code>exportBlockingOverlay</code> / <code>exportBlockingSub</code> で進捗を表示します。<kbd>Esc</kbd> キャンセルは <code>tryCancelSilentWebmExportFromEsc</code> と <code>currentExportRecorder</code> を参照してください。</li>
+                <li>音声ミックスは <code>ensureWebAudioRouting</code> → <code>buildAudioGraph(mode, outputNode)</code> で、通常再生は <code>audioCtx.destination</code>、書き出し中は一時的に <code>createMediaStreamDestination()</code> へ切り替え、終了時に <code>restorePlaybackAudioRouting</code> で戻します。<code>input[name="audioMode"]</code> の <code>value</code> に <code>mute</code> を足す場合は <code>getAudioMode</code> / <code>applySavedAudioToRadios</code> の許可配列も忘れずに。</li>
+                <li>コンテナやコーデックをブラウザ外で変えたい場合は、本アプリではなく変換パイプライン側の実装になります（使い方「書き出し（Exp WebM）とファイルについて」参照）。</li>
+            </ul>
+        </div>
+    </details>
+
+    <footer class="app-site-footer">
+        <p class="app-site-footer__copyright">
+            © 2026 <a href="https://www.miyabi-ga.co.jp/" target="_blank" rel="noopener noreferrer">MIYABI GAME AUDIO INC.</a>
+        </p>
+    </footer>
+
+    </div>
+
+    <input
+        type="file"
+        id="filePicker"
+        accept="video/*,.mp4,.m4v,.webm,.mov,.mkv,.avi,.wmv,.flv,.ogv,.mpeg,.mpg,.m1v,.m2v,.ts,.mts,.m2ts,.3gp,.3g2,.asf,.f4v"
+        multiple
+        hidden
+    >
+
+    <canvas
+        id="pipExportCanvas"
+        width="640"
+        height="360"
+        aria-hidden="true"
+        style="position: absolute; left: -9999px; top: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none"
+    ></canvas>
+
+    <script>
+        (function () {
+            /*
+             * MGA Movie Compare Player — 単一 index.html（ビルド不要・原則 file:// 可）。
+             *
+             * 読み順: 直下の DOM 参照のあと、本スクリプト内の「// === 数字.」で始まる区切りコメント順（エディタで === を検索）。
+             *
+             * 改造ポイント（挙動を変えやすい順の目安）:
+             *   - ブラウザ内保存: LS_PREFS_KEY + writePrefs/readPrefs（localStorage） / IDB_NAME, IDB_VER, IDB_STORE, IDB_KEY_LAST + persistSessionToStorage（IndexedDB）
+             *   - 映像レイアウト: VIEW_MODE_VALUES, applyViewMode, compare-stage 周辺の HTML/CSS
+             *   - ループ: loopPlaybackCheckbox と onVideoEnded
+             *   - シーク・同期: DISPLAY_FPS, DRIFT_* 定数, maybeAutoSyncDriftOneFrame, masterDuration
+             *   - 音声: getAudioMode, buildAudioGraph(mode, outputNode), restorePlaybackAudioRouting, ensureWebAudioRouting, input[name="audioMode"]（split-mono / old-stereo / new-stereo / mute）
+             *   - WebM 書き出し: pipExportCanvas, captureStream, pickWebMRecorderMimeType(withAudio), MediaRecorder, runSilentWebmExport, pipExportActive, exportBlockingOverlay / exportBlockingSub, exportBlockingEscHint, soloTcNoticeOverlay, tryCancelSilentWebmExportFromEsc, currentExportRecorder, buildAudioGraph の MediaStreamDestination 切替
+             *   - 対応拡張子: #filePicker の accept と VIDEO_FILE_EXT / mimeTypeHintForVideoFileName
+             */
+            const dropZone = document.getElementById('main-drop-zone');
+            const filePicker = document.getElementById('filePicker');
+            const videoLeft = document.getElementById('videoLeft');
+            const videoRight = document.getElementById('videoRight');
+            const panelLeft = document.getElementById('panelLeft');
+            const panelRight = document.getElementById('panelRight');
+            const nameLeft = document.getElementById('nameLeft');
+            const nameRight = document.getElementById('nameRight');
+            const infoLeft = document.getElementById('infoLeft');
+            const infoRight = document.getElementById('infoRight');
+            const seekBar = document.getElementById('seekBar');
+            const seekBarWrap = document.getElementById('seekBarWrap');
+            const playStopBtn = document.getElementById('playStopBtn');
+            const loopPlaybackCheckbox = document.getElementById('loopPlaybackCheckbox');
+            const currentTimeEl = document.getElementById('currentTime');
+            const totalTimeEl = document.getElementById('totalTime');
+            const driftRow = document.getElementById('driftRow');
+            const driftMs = document.getElementById('driftMs');
+            const driftFrames = document.getElementById('driftFrames');
+            const timecodeOverlayLeft = document.getElementById('timecodeOverlayLeft');
+            const timecodeOverlayRight = document.getElementById('timecodeOverlayRight');
+            const logEl = document.getElementById('log');
+            const compareStage = document.getElementById('compareStage');
+            const compareGrid = document.getElementById('compareGrid');
+            const compareComposite = document.getElementById('compareComposite');
+            const frameLeft = document.getElementById('frameLeft');
+            const frameRight = document.getElementById('frameRight');
+            const frameStack = document.getElementById('frameStack');
+            const timecodeOverlayStack = document.getElementById('timecodeOverlayStack');
+            const viewModeSelect = document.getElementById('viewModeSelect');
+            const pipExportCanvas = document.getElementById('pipExportCanvas');
+            const exportPipBtn = document.getElementById('exportPipBtn');
+            const exportModeSelect = document.getElementById('exportModeSelect');
+            const exportBurnTcCheckbox = document.getElementById('exportBurnTcCheckbox');
+            const exportBlockingOverlay = document.getElementById('exportBlockingOverlay');
+            const exportBlockingSub = document.getElementById('exportBlockingSub');
+            const soloTcNoticeOverlay = document.getElementById('soloTcNoticeOverlay');
+            const soloTcNoticeOk = document.getElementById('soloTcNoticeOk');
+            const EXPORT_WEBM_BTN_LABEL = 'Exp WebM';
+
+            // === 1. UI 補助（トランスポート枠の glow・マニュアル accordion）
+            const transportOptGlowClearTimers = { view: 0, loop: 0, audio: 0 };
+            function flashTransportOptBox(which) {
+                const sel =
+                    which === 'view'
+                        ? '.transport-opt-box--view'
+                        : which === 'loop'
+                          ? '.transport-opt-box--loop'
+                          : '.transport-opt-box--audio';
+                const box = document.querySelector(sel);
+                if (!box) return;
+                box.classList.remove('transport-opt-box--glow');
+                if (transportOptGlowClearTimers[which]) {
+                    clearTimeout(transportOptGlowClearTimers[which]);
+                    transportOptGlowClearTimers[which] = 0;
+                }
+                void box.offsetWidth;
+                box.classList.add('transport-opt-box--glow');
+                transportOptGlowClearTimers[which] = setTimeout(() => {
+                    box.classList.remove('transport-opt-box--glow');
+                    transportOptGlowClearTimers[which] = 0;
+                }, 900);
+            }
+
+            (function bindAppDocFoldAccordion() {
+                const folds = document.querySelectorAll('details.app-doc-fold');
+                if (!folds.length) return;
+                folds.forEach((d) => {
+                    d.addEventListener('toggle', () => {
+                        if (!d.open) return;
+                        folds.forEach((other) => {
+                            if (other !== d) other.removeAttribute('open');
+                        });
+                    });
+                });
+            })();
+
+            // === 2. 映像レイアウト（VIEW_MODE）とループ UI
+            const VIEW_MODE_VALUES = ['side-by-side', 'stack-diff', 'stack-cross'];
+
+            function getViewMode() {
+                if (!viewModeSelect) return 'side-by-side';
+                const v = viewModeSelect.value || 'side-by-side';
+                return VIEW_MODE_VALUES.indexOf(v) >= 0 ? v : 'side-by-side';
+            }
+
+            function applySavedViewMode(mode) {
+                if (!viewModeSelect) return;
+                let m;
+                if (mode === 'stack-exclusion') {
+                    m = 'stack-diff';
+                } else {
+                    m = VIEW_MODE_VALUES.indexOf(mode) >= 0 ? mode : 'side-by-side';
+                }
+                viewModeSelect.value = m;
+            }
+
+            function viewModeLabelEn(mode) {
+                if (mode === 'stack-diff') return 'Difference';
+                if (mode === 'stack-cross') return 'Overlay';
+                return 'Side by Side';
+            }
+
+            function isStackViewMode(mode) {
+                return mode != null && mode !== 'side-by-side';
+            }
+
+            function applyViewMode(modeOpt) {
+                const mode =
+                    modeOpt != null && VIEW_MODE_VALUES.indexOf(modeOpt) >= 0 ? modeOpt : getViewMode();
+                const composite = isStackViewMode(mode);
+                if (compareStage) compareStage.classList.toggle('compare-stage--composite', composite);
+                if (compareGrid) compareGrid.toggleAttribute('hidden', composite);
+                if (compareComposite) compareComposite.toggleAttribute('hidden', !composite);
+
+                videoLeft.classList.remove('video-stack-bottom');
+                videoRight.classList.remove('video-stack-top--diff', 'video-stack-top--cross');
+                if (composite && frameStack && timecodeOverlayStack) {
+                    videoLeft.classList.add('video-stack-bottom');
+                    if (mode === 'stack-diff') videoRight.classList.add('video-stack-top--diff');
+                    else if (mode === 'stack-cross') videoRight.classList.add('video-stack-top--cross');
+                    frameStack.insertBefore(videoLeft, timecodeOverlayStack);
+                    frameStack.insertBefore(videoRight, timecodeOverlayStack);
+                } else if (frameLeft && frameRight && timecodeOverlayLeft && timecodeOverlayRight) {
+                    frameLeft.insertBefore(videoLeft, timecodeOverlayLeft);
+                    frameRight.insertBefore(videoRight, timecodeOverlayRight);
+                }
+                updateDriftAndOverlays();
+            }
+
+            /** プルダウンと映像 DOM を同じモードに揃える（キー / select 共通） */
+            function applyLayoutSelection(modeOpt, logPrefix) {
+                if (!viewModeSelect) return;
+                let mode;
+                if (modeOpt != null && VIEW_MODE_VALUES.indexOf(modeOpt) >= 0) {
+                    mode = modeOpt;
+                    viewModeSelect.value = mode;
+                } else {
+                    mode = getViewMode();
+                }
+                applyViewMode(mode);
+                writePrefs();
+                if (logPrefix) writeLog(logPrefix + viewModeLabelEn(mode));
+                flashSeekHint('Layout', viewModeLabelEn(mode), 'notice');
+                schedulePersistSession();
+                flashTransportOptBox('view');
+            }
+
+            function getLoopPlaybackEnabled() {
+                return !!(loopPlaybackCheckbox && loopPlaybackCheckbox.checked);
+            }
+
+            function applySavedLoopPlayback(enabled) {
+                if (!loopPlaybackCheckbox) return;
+                loopPlaybackCheckbox.checked = enabled !== false;
+            }
+
+            function logAndPersistLoopPlayback() {
+                const on = getLoopPlaybackEnabled();
+                writePrefs();
+                schedulePersistSession();
+                writeLog('Loop playback: ' + (on ? 'ON' : 'OFF'));
+                flashSeekHint('Loop', on ? 'ON' : 'OFF', 'notice');
+                flashTransportOptBox('loop');
+            }
+
+            // === 3. 再生セッション状態・保存用定数・Web Audio 準備
+            let urlLeft = null;
+            let urlRight = null;
+            let fileLeft = null;
+            let fileRight = null;
+            let isSeeking = false;
+            let dragHoverDepth = 0;
+            let lastArrowSeekLogAt = 0;
+            let lastSeekBarInputLogAt = 0;
+            let lastSeekFlashScrubAt = 0;
+            let rafId = 0;
+            let audioCtx = null;
+            let webAudioWired = false;
+            let mediaSrcL = null;
+            let mediaSrcR = null;
+
+            /** 再生中のズレが大きいとき、遅れ側を 1 フレームだけ進める自動補正 */
+            let lastDriftFixAt = 0;
+            let lastDriftFixLogAt = 0;
+            const DRIFT_AUTO_FIX_MS = 100;
+            const DRIFT_FIX_COOLDOWN_MS = 170;
+
+            /** PiP WebM 書き出し中は ended ループ等を抑止し、トランスポートをロックする */
+            let pipExportActive = false;
+            let pipExportRaf = 0;
+            let pipExportUserCancel = false;
+            let currentExportRecorder = null;
+            let pipExportEmergencyCleanup = null;
+
+            const LS_PREFS_KEY = 'mp4_compare_prefs_v1';
+            const IDB_NAME = 'mp4_compare_session_v1';
+            const IDB_STORE = 'kv';
+            const IDB_KEY_LAST = 'lastSession';
+            const IDB_VER = 1;
+
+            let pendingRestoreTime = null;
+            let persistSessionTimer = null;
+
+            /** MP4 コンテナ（moov / stts 等）から得た平均 FPS。null は未解析 */
+            const containerFps = { left: null, right: null };
+
+            function isTypingTarget(el) {
+                if (!el || !el.nodeName) return false;
+                const n = el.nodeName;
+                if (n === 'TEXTAREA' || n === 'SELECT') return true;
+                if (n === 'INPUT') {
+                    const t = (el.type || '').toLowerCase();
+                    if (t === 'range') return false;
+                    return true;
+                }
+                return el.isContentEditable === true;
+            }
+
+            /** タイムコードのフォールバック FPS（測定前の換算・総フレーム表示にも使用） */
+            const DISPLAY_FPS = 60;
+            /** マスター再生軸の 1 フレーム秒（左右の表示 FPS の大きい方） */
+            let masterFrameSec = 1 / DISPLAY_FPS;
+
+            // === 4. ログ・シークフラッシュ・localStorage prefs
+            const LOG_MAX_LINES = 500;
+            function syncLogPanelHeightToShortcutGuide() {
+                const guide = document.querySelector('.shortcut-guide');
+                if (!guide || !logEl) return;
+                const h = Math.max(120, Math.round(guide.getBoundingClientRect().height));
+                logEl.style.height = h + 'px';
+                logEl.style.minHeight = h + 'px';
+                logEl.style.maxHeight = h + 'px';
+            }
+            function writeLog(m) {
+                if (!logEl) return;
+                const now = new Date();
+                const time =
+                    '[' +
+                    String(now.getHours()).padStart(2, '0') +
+                    ':' +
+                    String(now.getMinutes()).padStart(2, '0') +
+                    ':' +
+                    String(now.getSeconds()).padStart(2, '0') +
+                    ']';
+                const cur = logEl.innerText;
+                const lines = cur ? cur.split('\n') : [];
+                lines.push(time + ' - ' + m);
+                if (lines.length > LOG_MAX_LINES) {
+                    lines.splice(0, lines.length - LOG_MAX_LINES);
+                }
+                logEl.innerText = lines.join('\n');
+                logEl.scrollTop = logEl.scrollHeight;
+                syncLogPanelHeightToShortcutGuide();
+            }
+
+            function logArrowSeekDebounced(msg) {
+                const now = performance.now();
+                if (now - lastArrowSeekLogAt < 220) return;
+                lastArrowSeekLogAt = now;
+                writeLog(msg);
+            }
+
+            function logSeekBarInputThrottled(t) {
+                const now = performance.now();
+                if (now - lastSeekBarInputLogAt < 160) return;
+                lastSeekBarInputLogAt = now;
+                writeLog('Seek bar: scrub to ' + formatTimecodeForTransport(t));
+            }
+
+            let seekFlashHideTimer = 0;
+            let seekFlashAriaTimer = 0;
+
+            function flashSeekHint(primary, secondary, kind) {
+                const root = document.getElementById('seekFlashOverlay');
+                const pEl = document.getElementById('seekFlashPrimary');
+                const sEl = document.getElementById('seekFlashSecondary');
+                if (!root || !pEl || !sEl) return;
+                clearTimeout(seekFlashHideTimer);
+                clearTimeout(seekFlashAriaTimer);
+
+                pEl.textContent = primary != null ? String(primary) : '';
+                const sec = secondary != null && secondary !== '' ? String(secondary) : '';
+                sEl.textContent = sec;
+                sEl.hidden = !sec;
+
+                root.setAttribute('aria-hidden', 'false');
+                if (!root.classList.contains('seek-flash--visible')) {
+                    requestAnimationFrame(() => {
+                        root.classList.add('seek-flash--visible');
+                    });
+                } else {
+                    root.classList.add('seek-flash--visible');
+                }
+
+                const isNotice = kind === 'notice';
+                const holdMs = isNotice ? 2100 : 340;
+                const fadeOutMs = 820;
+                seekFlashHideTimer = setTimeout(() => {
+                    root.classList.remove('seek-flash--visible');
+                }, holdMs);
+                seekFlashAriaTimer = setTimeout(() => {
+                    seekFlashAriaTimer = 0;
+                    root.setAttribute('aria-hidden', 'true');
+                }, holdMs + fadeOutMs + 40);
+            }
+
+            function flashSeekScrubThrottled(t) {
+                const now = performance.now();
+                if (now - lastSeekFlashScrubAt < 200) return;
+                lastSeekFlashScrubAt = now;
+                flashSeekHint('Scrub', formatTimecodeForTransport(t));
+            }
+
+            (function initLogShortcutHeightSync() {
+                const g = document.querySelector('.shortcut-guide');
+                if (g && typeof ResizeObserver !== 'undefined') {
+                    new ResizeObserver(() => syncLogPanelHeightToShortcutGuide()).observe(g);
+                }
+                requestAnimationFrame(() => {
+                    syncLogPanelHeightToShortcutGuide();
+                    requestAnimationFrame(syncLogPanelHeightToShortcutGuide);
+                });
+            })();
+
+            function readPrefs() {
+                try {
+                    const raw = localStorage.getItem(LS_PREFS_KEY);
+                    if (!raw) return {};
+                    const j = JSON.parse(raw);
+                    return j && typeof j === 'object' ? j : {};
+                } catch (_) {
+                    return {};
+                }
+            }
+
+            const EXPORT_WEBM_MODE_VALUES = ['compare-pip', 'solo-old', 'solo-new'];
+
+            function getExportMode() {
+                if (!exportModeSelect) return 'compare-pip';
+                const v = exportModeSelect.value || 'compare-pip';
+                return EXPORT_WEBM_MODE_VALUES.indexOf(v) >= 0 ? v : 'compare-pip';
+            }
+
+            function isSoloExportMode() {
+                const m = getExportMode();
+                return m === 'solo-old' || m === 'solo-new';
+            }
+
+            function getExportBurnTc() {
+                if (isSoloExportMode()) return true;
+                return !!(exportBurnTcCheckbox && exportBurnTcCheckbox.checked);
+            }
+
+            function canExportWebm() {
+                if (pipExportActive) return false;
+                const m = getExportMode();
+                if (m === 'compare-pip') return bothReady();
+                if (m === 'solo-old') return getDuration(videoLeft) > 0;
+                if (m === 'solo-new') return getDuration(videoRight) > 0;
+                return false;
+            }
+
+            function applySavedExportWebmPrefs(p) {
+                if (!p || typeof p !== 'object') return;
+                if (exportModeSelect && p.exportMode) {
+                    const m = EXPORT_WEBM_MODE_VALUES.indexOf(p.exportMode) >= 0 ? p.exportMode : 'compare-pip';
+                    exportModeSelect.value = m;
+                }
+                if (exportBurnTcCheckbox && typeof p.exportBurnTc === 'boolean') {
+                    exportBurnTcCheckbox.checked = p.exportBurnTc;
+                }
+            }
+
+            function writePrefs() {
+                try {
+                    localStorage.setItem(
+                        LS_PREFS_KEY,
+                        JSON.stringify({
+                            audioMode: getAudioMode(),
+                            transportTime: parseFloat(seekBar.value) || 0,
+                            viewMode: getViewMode(),
+                            loopPlayback: getLoopPlaybackEnabled(),
+                            exportMode: getExportMode(),
+                            exportBurnTc: getExportBurnTc(),
+                        })
+                    );
+                } catch (_) {}
+            }
+
+            function applySavedAudioToRadios(mode) {
+                const allowed = ['split-mono', 'old-stereo', 'new-stereo', 'mute'];
+                const m = allowed.indexOf(mode) >= 0 ? mode : 'split-mono';
+                const el = document.querySelector('input[name="audioMode"][value="' + m + '"]');
+                if (el) el.checked = true;
+            }
+
+            function audioModeLabel(mode) {
+                if (mode === 'split-mono') return 'Both (Mono + Pan)';
+                if (mode === 'old-stereo') return 'Older Only (Stereo)';
+                if (mode === 'new-stereo') return 'Newer Only (Stereo)';
+                if (mode === 'mute') return 'Mute';
+                return String(mode);
+            }
+
+            // === 5. IndexedDB セッション
+            function openIdb() {
+                return new Promise((resolve, reject) => {
+                    if (!window.indexedDB) {
+                        reject(new Error('IndexedDB not supported'));
+                        return;
+                    }
+                    const req = indexedDB.open(IDB_NAME, IDB_VER);
+                    req.onerror = () => reject(req.error || new Error('IDB open error'));
+                    req.onsuccess = () => resolve(req.result);
+                    req.onupgradeneeded = () => {
+                        const db = req.result;
+                        if (!db.objectStoreNames.contains(IDB_STORE)) {
+                            db.createObjectStore(IDB_STORE);
+                        }
+                    };
+                });
+            }
+            function idbPut(key, val) {
+                return openIdb().then(
+                    (db) =>
+                        new Promise((resolve, reject) => {
+                            const tx = db.transaction(IDB_STORE, 'readwrite');
+                            tx.oncomplete = () => resolve();
+                            tx.onerror = () => reject(tx.error || new Error('IDB put'));
+                            tx.objectStore(IDB_STORE).put(val, key);
+                        })
+                );
+            }
+            function idbGet(key) {
+                return openIdb().then(
+                    (db) =>
+                        new Promise((resolve, reject) => {
+                            const tx = db.transaction(IDB_STORE, 'readonly');
+                            const r = tx.objectStore(IDB_STORE).get(key);
+                            r.onsuccess = () => resolve(r.result);
+                            r.onerror = () => reject(r.error || new Error('IDB get'));
+                        })
+                );
+            }
+
+            function schedulePersistSession() {
+                clearTimeout(persistSessionTimer);
+                persistSessionTimer = setTimeout(() => {
+                    persistSessionTimer = null;
+                    persistSessionToStorage().catch((e) => {
+                        writeLog('Session save failed: ' + (e && e.message ? e.message : String(e)));
+                    });
+                }, 450);
+            }
+
+            async function persistSessionToStorage() {
+                writePrefs();
+                if (!window.indexedDB) return;
+                const row = {
+                    v: 1,
+                    audioMode: getAudioMode(),
+                    transportTime: parseFloat(seekBar.value) || 0,
+                    viewMode: getViewMode(),
+                    loopPlayback: getLoopPlaybackEnabled(),
+                };
+                if (fileLeft) {
+                    row.lName = fileLeft.name;
+                    row.lm = fileLeft.lastModified;
+                    row.lBlob = fileLeft;
+                }
+                if (fileRight) {
+                    row.rName = fileRight.name;
+                    row.rm = fileRight.lastModified;
+                    row.rBlob = fileRight;
+                }
+                if (!row.lBlob && !row.rBlob) {
+                    try {
+                        const db = await openIdb();
+                        await new Promise((resolve, reject) => {
+                            const tx = db.transaction(IDB_STORE, 'readwrite');
+                            tx.oncomplete = () => resolve();
+                            tx.onerror = () => reject(tx.error);
+                            tx.objectStore(IDB_STORE).delete(IDB_KEY_LAST);
+                        });
+                    } catch (_) {}
+                    return;
+                }
+                await idbPut(IDB_KEY_LAST, row);
+            }
+
+            async function restoreSessionFromStorage() {
+                const prefs = readPrefs();
+                applySavedAudioToRadios(prefs.audioMode);
+                pendingRestoreTime =
+                    typeof prefs.transportTime === 'number' && Number.isFinite(prefs.transportTime)
+                        ? prefs.transportTime
+                        : null;
+
+                if (!window.indexedDB) {
+                    writeLog('IndexedDB unavailable; skipped video blob restore.');
+                    return;
+                }
+                let row;
+                try {
+                    row = await idbGet(IDB_KEY_LAST);
+                } catch (e) {
+                    writeLog('Session read failed: ' + (e && e.message ? e.message : String(e)));
+                    return;
+                }
+                if (!row || (!row.lBlob && !row.rBlob)) {
+                    writeLog('No stored video session (audio/seek prefs may still apply).');
+                    return;
+                }
+                if (row.audioMode) applySavedAudioToRadios(row.audioMode);
+                if (row.viewMode) applySavedViewMode(row.viewMode);
+                if (typeof row.loopPlayback === 'boolean') applySavedLoopPlayback(row.loopPlayback);
+                if (typeof row.transportTime === 'number' && Number.isFinite(row.transportTime)) {
+                    pendingRestoreTime = row.transportTime;
+                }
+
+                if (row.lBlob && row.rBlob) {
+                    const fl = new File([row.lBlob], row.lName || 'left.mp4', {
+                        type: mimeTypeHintForVideoFileName(row.lName || 'left.mp4'),
+                        lastModified: typeof row.lm === 'number' ? row.lm : Date.now(),
+                    });
+                    const fr = new File([row.rBlob], row.rName || 'right.mp4', {
+                        type: mimeTypeHintForVideoFileName(row.rName || 'right.mp4'),
+                        lastModified: typeof row.rm === 'number' ? row.rm : Date.now(),
+                    });
+                    assignPairToVideos(fl, fr, { skipPersist: true });
+                    writeLog('Restored pair: ' + fl.name + ' / ' + fr.name);
+                    return;
+                }
+                if (row.lBlob) {
+                    const fl = new File([row.lBlob], row.lName || 'left.mp4', {
+                        type: mimeTypeHintForVideoFileName(row.lName || 'left.mp4'),
+                        lastModified: typeof row.lm === 'number' ? row.lm : Date.now(),
+                    });
+                    revokeAll();
+                    fileLeft = fl;
+                    urlLeft = URL.createObjectURL(fl);
+                    videoLeft.src = urlLeft;
+                    nameLeft.textContent = fl.name;
+                    updatePanelInfoLine('left');
+                    setLoaded(panelLeft, true);
+                    setLoaded(panelRight, false);
+                    nameRight.textContent = 'Not Loaded';
+                    infoRight.hidden = true;
+                    infoRight.textContent = '';
+                    videoRight.removeAttribute('src');
+                    videoRight.load();
+                    writeLog('Restored left only: ' + fl.name + ' (right empty)');
+                    void refreshContainerFpsForCurrentFiles();
+                    applyViewMode(getViewMode());
+                    return;
+                }
+                if (row.rBlob) {
+                    const fr = new File([row.rBlob], row.rName || 'right.mp4', {
+                        type: mimeTypeHintForVideoFileName(row.rName || 'right.mp4'),
+                        lastModified: typeof row.rm === 'number' ? row.rm : Date.now(),
+                    });
+                    revokeAll();
+                    fileRight = fr;
+                    urlRight = URL.createObjectURL(fr);
+                    videoRight.src = urlRight;
+                    nameRight.textContent = fr.name;
+                    updatePanelInfoLine('right');
+                    setLoaded(panelRight, true);
+                    setLoaded(panelLeft, false);
+                    nameLeft.textContent = 'Not Loaded';
+                    infoLeft.hidden = true;
+                    infoLeft.textContent = '';
+                    videoLeft.removeAttribute('src');
+                    videoLeft.load();
+                    writeLog('Restored right only: ' + fr.name + ' (left empty)');
+                    void refreshContainerFpsForCurrentFiles();
+                    applyViewMode(getViewMode());
+                }
+            }
+
+            // === 6. 起動時プリファレンス適用（IDB リストアは末尾の boot）
+            (function initPrefsFromStorage() {
+                try {
+                    const p = readPrefs();
+                    if (p.audioMode) applySavedAudioToRadios(p.audioMode);
+                    applySavedViewMode(p.viewMode);
+                    applySavedLoopPlayback(p.loopPlayback);
+                    applySavedExportWebmPrefs(p);
+                    applyViewMode(getViewMode());
+                } catch (_) {}
+            })();
+
+            writeLog('MGA Movie Compare Player started (v1.0).');
+
+            // === 7. MP4 moov 走査（コンテナからの平均 FPS 推定）
+            function rU32(u8, o) {
+                return ((u8[o] << 24) | (u8[o + 1] << 16) | (u8[o + 2] << 8) | u8[o + 3]) >>> 0;
+            }
+            function fourcc(u8, o) {
+                return String.fromCharCode(u8[o], u8[o + 1], u8[o + 2], u8[o + 3]);
+            }
+            function rU64FromU32(u8, o) {
+                const hi = rU32(u8, o);
+                const lo = rU32(u8, o + 4);
+                return hi * 0x100000000 + lo;
+            }
+            function eachChildBox(u8, bodyStart, bodyEnd, fn) {
+                let p = bodyStart;
+                while (p + 8 <= bodyEnd) {
+                    let sz = rU32(u8, p);
+                    const typ = fourcc(u8, p + 4);
+                    if (sz < 8) break;
+                    let h = 8;
+                    if (sz === 1) {
+                        if (p + 16 > bodyEnd) break;
+                        sz = rU64FromU32(u8, p + 8);
+                        h = 16;
+                    }
+                    const boxEnd = sz === 0 ? bodyEnd : p + sz;
+                    if (boxEnd > bodyEnd || boxEnd <= p + h) break;
+                    const inner0 = p + h;
+                    fn(typ, inner0, boxEnd);
+                    if (sz === 0) break;
+                    p = boxEnd;
+                }
+            }
+            function locateMoovRangeInBuffer(u8, start, end) {
+                let out = null;
+                eachChildBox(u8, start, end, (typ, b0, b1) => {
+                    if (typ === 'moov') out = [b0, b1];
+                });
+                return out;
+            }
+            async function readFileSliceToUint8(file, begin, end) {
+                const b = file.slice(begin, end);
+                return new Uint8Array(await b.arrayBuffer());
+            }
+            async function readMp4BufferForMoov(file) {
+                const n = file.size;
+                if (n < 16) return null;
+                const headLen = Math.min(12 * 1024 * 1024, n);
+                const head = await readFileSliceToUint8(file, 0, headLen);
+                let moov = locateMoovRangeInBuffer(head, 0, head.byteLength);
+                if (moov) return { buf: head, moov0: moov[0], moov1: moov[1] };
+                const tailLen = Math.min(8 * 1024 * 1024, n);
+                const tail = await readFileSliceToUint8(file, n - tailLen, n);
+                moov = locateMoovRangeInBuffer(tail, 0, tail.byteLength);
+                if (moov) return { buf: tail, moov0: moov[0], moov1: moov[1] };
+                if (n <= 36 * 1024 * 1024) {
+                    const whole = await readFileSliceToUint8(file, 0, n);
+                    moov = locateMoovRangeInBuffer(whole, 0, whole.byteLength);
+                    if (moov) return { buf: whole, moov0: moov[0], moov1: moov[1] };
+                }
+                return null;
+            }
+            function parseSttsAverageDelta(u8, b0, b1) {
+                if (b1 - b0 < 8) return null;
+                const ec = rU32(u8, b0 + 4);
+                let off = b0 + 8;
+                let sumC = 0;
+                let sumDur = 0;
+                for (let i = 0; i < ec; i++) {
+                    if (off + 8 > b1) break;
+                    const sc = rU32(u8, off);
+                    const sd = rU32(u8, off + 4);
+                    sumC += sc;
+                    sumDur += sc * sd;
+                    off += 8;
+                }
+                if (sumC === 0) return null;
+                return sumDur / sumC;
+            }
+            function parseStszSampleCount(u8, b0, b1) {
+                if (b1 - b0 < 12) return null;
+                return rU32(u8, b0 + 8);
+            }
+            function parseMdhdTimescaleDuration(u8, b0, b1) {
+                if (b1 - b0 < 20) return null;
+                const ver = u8[b0];
+                if (ver === 1) {
+                    if (b1 - b0 < 36) return null;
+                    return {
+                        timescale: rU32(u8, b0 + 20),
+                        duration: rU64FromU32(u8, b0 + 24),
+                    };
+                }
+                return {
+                    timescale: rU32(u8, b0 + 12),
+                    duration: rU32(u8, b0 + 16),
+                };
+            }
+            function parseTrakVideoFpsFromMoovChildren(u8, trakBody0, trakBody1) {
+                let isVideo = false;
+                let mdhdTd = null;
+                let avgDelta = null;
+                let sampleCount = null;
+
+                function walkStbl(a, b) {
+                    eachChildBox(u8, a, b, (typ, b0, b1) => {
+                        if (typ === 'stts') {
+                            const d = parseSttsAverageDelta(u8, b0, b1);
+                            if (d != null) avgDelta = d;
+                        } else if (typ === 'stsz') {
+                            const c = parseStszSampleCount(u8, b0, b1);
+                            if (c != null) sampleCount = c;
+                        }
+                    });
+                }
+                function walkMinf(a, b) {
+                    eachChildBox(u8, a, b, (typ, b0, b1) => {
+                        if (typ === 'stbl') walkStbl(b0, b1);
+                    });
+                }
+                function walkMdia(a, b) {
+                    eachChildBox(u8, a, b, (typ, b0, b1) => {
+                        if (typ === 'hdlr') {
+                            if (b1 - b0 >= 12) {
+                                const ht = fourcc(u8, b0 + 8);
+                                if (ht === 'vide' || ht === 'pict') isVideo = true;
+                            }
+                        } else if (typ === 'mdhd') {
+                            const p = parseMdhdTimescaleDuration(u8, b0, b1);
+                            if (p && p.timescale) mdhdTd = p;
+                        } else if (typ === 'minf') walkMinf(b0, b1);
+                    });
+                }
+
+                eachChildBox(u8, trakBody0, trakBody1, (typ, b0, b1) => {
+                    if (typ === 'mdia') walkMdia(b0, b1);
+                });
+                if (!isVideo || !mdhdTd || !mdhdTd.timescale) return null;
+
+                let fps = null;
+                if (avgDelta && avgDelta > 0) {
+                    fps = mdhdTd.timescale / avgDelta;
+                }
+                if ((fps == null || !Number.isFinite(fps) || fps <= 0) && sampleCount > 0 && mdhdTd.duration > 0) {
+                    const sec = mdhdTd.duration / mdhdTd.timescale;
+                    if (sec > 1e-6) fps = sampleCount / sec;
+                }
+                if (fps == null || !Number.isFinite(fps) || fps <= 0) return null;
+                return Math.round(Math.min(240, Math.max(1, fps)) * 100) / 100;
+            }
+
+            function parseFirstVideoTrackFpsFromMoov(u8, moov0, moov1) {
+                let found = null;
+                eachChildBox(u8, moov0, moov1, (typ, b0, b1) => {
+                    if (typ === 'trak' && found == null) {
+                        const fp = parseTrakVideoFpsFromMoovChildren(u8, b0, b1);
+                        if (fp != null) found = fp;
+                    }
+                });
+                return found;
+            }
+            async function extractMp4ContainerFpsFromFile(file) {
+                try {
+                    const loc = await readMp4BufferForMoov(file);
+                    if (!loc) return null;
+                    return parseFirstVideoTrackFpsFromMoov(loc.buf, loc.moov0, loc.moov1);
+                } catch (_) {
+                    return null;
+                }
+            }
+            async function refreshContainerFpsForCurrentFiles() {
+                if (fileLeft) {
+                    containerFps.left = await extractMp4ContainerFpsFromFile(fileLeft);
+                } else {
+                    containerFps.left = null;
+                }
+                if (fileRight) {
+                    containerFps.right = await extractMp4ContainerFpsFromFile(fileRight);
+                } else {
+                    containerFps.right = null;
+                }
+                refreshMasterFrameSec();
+                updatePanelInfoLine('left');
+                updatePanelInfoLine('right');
+                syncSeekMax();
+                updateSeekUiFromVideos();
+            }
+
+            // === 8. 拡張子・MIME・ファイル選別・パネル表示
+            /** 拡張子が動画っぽいもの（OS が MIME を付けない場合の補助） */
+            const VIDEO_FILE_EXT = new Set([
+                '.mp4',
+                '.m4v',
+                '.webm',
+                '.ogv',
+                '.mov',
+                '.qt',
+                '.avi',
+                '.mkv',
+                '.wmv',
+                '.flv',
+                '.ts',
+                '.mts',
+                '.m2ts',
+                '.mpg',
+                '.mpeg',
+                '.m1v',
+                '.m2v',
+                '.3gp',
+                '.3g2',
+                '.asf',
+                '.f4v',
+            ]);
+
+            function fileExtLower(name) {
+                const s = String(name || '').toLowerCase();
+                const dot = s.lastIndexOf('.');
+                if (dot < 0) return '';
+                return s.slice(dot);
+            }
+
+            function mimeTypeHintForVideoFileName(name) {
+                const ext = fileExtLower(name);
+                const map = {
+                    '.webm': 'video/webm',
+                    '.mp4': 'video/mp4',
+                    '.m4v': 'video/mp4',
+                    '.mov': 'video/quicktime',
+                    '.qt': 'video/quicktime',
+                    '.ogv': 'video/ogg',
+                    '.avi': 'video/x-msvideo',
+                    '.mkv': 'video/x-matroska',
+                    '.wmv': 'video/x-ms-wmv',
+                    '.flv': 'video/x-flv',
+                    '.ts': 'video/mp2t',
+                    '.mts': 'video/mp2t',
+                    '.m2ts': 'video/mp2t',
+                    '.mpg': 'video/mpeg',
+                    '.mpeg': 'video/mpeg',
+                    '.m1v': 'video/mpeg',
+                    '.m2v': 'video/mpeg',
+                    '.3gp': 'video/3gpp',
+                    '.3g2': 'video/3gpp2',
+                    '.asf': 'video/x-ms-asf',
+                    '.f4v': 'video/mp4',
+                };
+                return map[ext] || 'application/octet-stream';
+            }
+
+            function isUsableVideoFile(f) {
+                const type = (f.type || '').toLowerCase();
+                if (type.startsWith('video/')) return true;
+                if (type === 'application/mp4' || type === 'application/x-mp4') return true;
+                if (type.startsWith('audio/') || type.startsWith('image/') || type.startsWith('text/')) {
+                    return false;
+                }
+                const ext = fileExtLower(f.name);
+                if (!ext || !VIDEO_FILE_EXT.has(ext)) return false;
+                return !type || type === 'application/octet-stream' || type.startsWith('application/');
+            }
+
+            function pickVideoFiles(fileList) {
+                return Array.from(fileList).filter(isUsableVideoFile);
+            }
+
+            function compareFileByModifiedThenName(a, b) {
+                const d = a.lastModified - b.lastModified;
+                if (d !== 0) return d;
+                return String(a.name).localeCompare(String(b.name), 'ja');
+            }
+
+            /** 複数選択時は最終更新が最も古いファイルと最も新しいファイルを比較用に選ぶ */
+            function pickOldestAndNewest(videos) {
+                if (videos.length === 0) return null;
+                const sorted = [...videos].sort(compareFileByModifiedThenName);
+                return [sorted[0], sorted[sorted.length - 1]];
+            }
+
+            function formatFileDateEn(ms) {
+                try {
+                    return new Date(ms).toLocaleString('en-CA', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: false,
+                    });
+                } catch (_) {
+                    return '';
+                }
+            }
+
+            function updatePanelInfoLine(side) {
+                const file = side === 'left' ? fileLeft : fileRight;
+                const el = side === 'left' ? infoLeft : infoRight;
+                const v = side === 'left' ? videoLeft : videoRight;
+                if (!file) {
+                    el.hidden = true;
+                    el.textContent = '';
+                } else {
+                    const mod = 'Modified: ' + formatFileDateEn(file.lastModified);
+                    const d = getDuration(v);
+                    if (!d) {
+                        el.hidden = false;
+                        el.textContent = mod;
+                    } else {
+                        const c = containerFps[side];
+                        const baseFps = c != null && c > 0 ? c : DISPLAY_FPS;
+                        const totalF = Math.max(0, Math.round(d * baseFps));
+                        let fpsStr;
+                        if (c != null && c > 0) {
+                            fpsStr = c + ' fps';
+                        } else {
+                            fpsStr = 'FPS n/a (~' + DISPLAY_FPS + ' est.)';
+                        }
+                        el.hidden = false;
+                        el.textContent = mod + ' · ' + fpsStr + ' · Total: ' + totalF + ' f';
+                    }
+                }
+            }
+
+            function revokeAll() {
+                containerFps.left = null;
+                containerFps.right = null;
+                infoLeft.hidden = true;
+                infoLeft.textContent = '';
+                infoRight.hidden = true;
+                infoRight.textContent = '';
+                if (urlLeft) {
+                    URL.revokeObjectURL(urlLeft);
+                    urlLeft = null;
+                }
+                if (urlRight) {
+                    URL.revokeObjectURL(urlRight);
+                    urlRight = null;
+                }
+                fileLeft = null;
+                fileRight = null;
+            }
+
+            function setLoaded(panel, loaded) {
+                panel.classList.toggle('loaded', loaded);
+            }
+
+            function pad2(n) {
+                return String(n).padStart(2, '0');
+            }
+
+            function roundedFpsForSide(side) {
+                const c = containerFps[side];
+                if (c != null && c > 0) return Math.max(1, Math.min(240, Math.round(c)));
+                return DISPLAY_FPS;
+            }
+
+            function masterFpsIntForTransport() {
+                return Math.max(roundedFpsForSide('left'), roundedFpsForSide('right'));
+            }
+
+            function refreshMasterFrameSec() {
+                masterFrameSec = 1 / masterFpsIntForTransport();
+            }
+
+            /** HH:MM:SS:ff（fpsInt は整数コマ / 秒） */
+            function formatTimecodeWithFpsInt(sec, fpsInt) {
+                if (!Number.isFinite(sec) || sec < 0) sec = 0;
+                const f = Math.max(1, fpsInt | 0);
+                const totalFrames = Math.floor(sec * f + 1e-9);
+                const ff = ((totalFrames % f) + f) % f;
+                const totalSec = Math.floor(totalFrames / f);
+                const s = totalSec % 60;
+                const m = Math.floor(totalSec / 60) % 60;
+                const h = Math.floor(totalSec / 3600);
+                return pad2(h) + ':' + pad2(m) + ':' + pad2(s) + ':' + pad2(ff);
+            }
+
+            function formatTimecodeForSide(sec, side) {
+                return formatTimecodeWithFpsInt(sec, roundedFpsForSide(side));
+            }
+
+            function formatTimecodeForTransport(sec) {
+                return formatTimecodeWithFpsInt(sec, masterFpsIntForTransport());
+            }
+
+            function getSeekableEnd(v) {
+                try {
+                    if (!v.seekable || v.seekable.length === 0) return 0;
+                    const end = v.seekable.end(v.seekable.length - 1);
+                    return Number.isFinite(end) && end > 0 ? end : 0;
+                } catch (_) {
+                    return 0;
+                }
+            }
+
+            function getBufferedEnd(v) {
+                try {
+                    if (!v.buffered || v.buffered.length === 0) return 0;
+                    const end = v.buffered.end(v.buffered.length - 1);
+                    return Number.isFinite(end) && end > 0 ? end : 0;
+                } catch (_) {
+                    return 0;
+                }
+            }
+
+            /**
+             * 再生尺。MJPEG 入り AVI 等で duration が NaN/Infinity のとき seekable や
+             * blob ソースの buffered 末尾から推定する。
+             */
+            function getDuration(v) {
+                const d = v.duration;
+                if (Number.isFinite(d) && d > 0) return d;
+                const seekEnd = getSeekableEnd(v);
+                if (seekEnd > 0) return seekEnd;
+                const src = typeof v.src === 'string' ? v.src : '';
+                if (src.startsWith('blob:')) {
+                    const bufEnd = getBufferedEnd(v);
+                    if (bufEnd > 0) return bufEnd;
+                }
+                return 0;
+            }
+
+            function masterDuration() {
+                return Math.max(getDuration(videoLeft), getDuration(videoRight), 0.01);
+            }
+
+            // === 9. タイムコード・ドリフト・シーク・tick・割当ヘルパ（assignPair 等）
+            function updateDriftAndOverlays() {
+                const dL = getDuration(videoLeft);
+                const dR = getDuration(videoRight);
+                timecodeOverlayLeft.classList.toggle('video-timecode--idle', !dL);
+                timecodeOverlayRight.classList.toggle('video-timecode--idle', !dR);
+                timecodeOverlayLeft.textContent = dL ? formatTimecodeForSide(videoLeft.currentTime || 0, 'left') : '00:00:00:00';
+                timecodeOverlayRight.textContent = dR ? formatTimecodeForSide(videoRight.currentTime || 0, 'right') : '00:00:00:00';
+
+                const stackMode = isStackViewMode(getViewMode());
+                if (timecodeOverlayStack) {
+                    timecodeOverlayStack.classList.toggle('video-timecode--idle', !stackMode || !bothReady());
+                    if (stackMode && bothReady()) {
+                        const t = Math.max(videoLeft.currentTime || 0, videoRight.currentTime || 0);
+                        const dur = masterDuration();
+                        timecodeOverlayStack.textContent = formatTimecodeForTransport(Math.min(t, dur));
+                    } else if (stackMode) {
+                        timecodeOverlayStack.textContent = '00:00:00:00';
+                    }
+                }
+
+                if (!bothReady()) {
+                    driftRow.hidden = true;
+                    return;
+                }
+                driftRow.hidden = false;
+                if (videoLeft.ended || videoRight.ended) {
+                    driftMs.textContent = '----';
+                    driftFrames.textContent = '----';
+                    driftMs.classList.remove('tc-drift-ok', 'tc-drift-warn', 'tc-drift-bad');
+                    driftFrames.classList.remove('tc-drift-ok', 'tc-drift-warn', 'tc-drift-bad');
+                    return;
+                }
+                const tL = videoLeft.currentTime || 0;
+                const tR = videoRight.currentTime || 0;
+                const driftSec = Math.abs(tL - tR);
+                const driftMilli = Math.round(driftSec * 1000);
+                const msDisp = String(Math.min(9999, driftMilli)).padStart(4, '0');
+                const mf = masterFpsIntForTransport();
+                const frameDrift = Math.min(9999, Math.round(driftSec * mf));
+                const frDisp = String(frameDrift).padStart(4, '0');
+                driftMs.textContent = msDisp;
+                driftFrames.textContent = frDisp;
+                driftMs.classList.remove('tc-drift-ok', 'tc-drift-warn', 'tc-drift-bad');
+                driftFrames.classList.remove('tc-drift-ok', 'tc-drift-warn', 'tc-drift-bad');
+                const driftDangerFrames = Math.max(1, Math.round(0.08 * mf));
+                let driftToneClass = 'tc-drift-warn';
+                if (frameDrift === 0) driftToneClass = 'tc-drift-ok';
+                else if (frameDrift > driftDangerFrames) driftToneClass = 'tc-drift-bad';
+                driftMs.classList.add(driftToneClass);
+                driftFrames.classList.add(driftToneClass);
+            }
+
+            function syncSeekMax() {
+                refreshMasterFrameSec();
+                const dur = masterDuration();
+                seekBar.max = String(Math.max(dur, 0.01));
+                seekBar.step = String(masterFrameSec);
+                totalTimeEl.textContent = formatTimecodeForTransport(dur);
+                updateSeekUiFromVideos();
+            }
+
+            function applyTimeToVideos(t) {
+                const dL = getDuration(videoLeft);
+                const dR = getDuration(videoRight);
+                const setOne = (el, d) => {
+                    if (!d) return;
+                    let x = Math.min(t, d);
+                    if (t >= d) x = Math.max(0, d - masterFrameSec);
+                    el.currentTime = x;
+                };
+                setOne(videoLeft, dL);
+                setOne(videoRight, dR);
+            }
+
+            /** 再生再開時に ended のまま固まるのを避ける */
+            function releaseStuckEnded() {
+                const t = parseFloat(seekBar.value) || 0;
+                [videoLeft, videoRight].forEach((v) => {
+                    const d = getDuration(v);
+                    if (d && v.ended) {
+                        v.currentTime = Math.max(0, Math.min(t, d - masterFrameSec));
+                    }
+                });
+            }
+
+            function updateSeekUiFromVideos() {
+                const dur = masterDuration();
+                const tL = videoLeft.currentTime || 0;
+                const tR = videoRight.currentTime || 0;
+                if (!isSeeking) {
+                    const t = Math.max(tL, tR);
+                    seekBar.value = String(Math.min(t, dur));
+                    currentTimeEl.textContent = formatTimecodeForTransport(Math.min(t, dur));
+                }
+                updateDriftAndOverlays();
+            }
+
+            /**
+             * 尺の短い側が終端付近で張り付き、長い側だけがマスター時刻まで進んでいる状態。
+             * このときの currentTime 差は「同期不良」ではなくクリップ長の差なので +1f 補正をしない。
+             */
+            function isAsymmetricClipTailDrift() {
+                const dL = getDuration(videoLeft);
+                const dR = getDuration(videoRight);
+                if (!dL || !dR) return false;
+                const tL = videoLeft.currentTime || 0;
+                const tR = videoRight.currentTime || 0;
+                const eps = Math.max(masterFrameSec * 4, 0.12);
+                const leftAtTail = tL >= dL - eps;
+                const rightAtTail = tR >= dR - eps;
+                return (leftAtTail && !rightAtTail) || (rightAtTail && !leftAtTail);
+            }
+
+            function maybeAutoSyncDriftOneFrame() {
+                if (pipExportActive) return;
+                if (!bothReady() || isSeeking) return;
+                if (videoLeft.seeking || videoRight.seeking) return;
+                if (videoLeft.paused || videoRight.paused) return;
+                if (videoLeft.ended || videoRight.ended) return;
+                if (isAsymmetricClipTailDrift()) return;
+                const tL = videoLeft.currentTime || 0;
+                const tR = videoRight.currentTime || 0;
+                const driftMilli = Math.abs(tL - tR) * 1000;
+                if (driftMilli < DRIFT_AUTO_FIX_MS) return;
+                const now = performance.now();
+                if (now - lastDriftFixAt < DRIFT_FIX_COOLDOWN_MS) return;
+                lastDriftFixAt = now;
+                const dur = masterDuration();
+                const tMaster = Math.max(tL, tR);
+                const tNew = Math.min(dur - 0.001, tMaster + masterFrameSec);
+                applyTimeToVideos(tNew);
+                if (now - lastDriftFixLogAt > 2200) {
+                    lastDriftFixLogAt = now;
+                    writeLog(
+                        'Sync auto-correct: master +1f on both (drift was ' +
+                            String(Math.min(9999, Math.round(driftMilli))).padStart(4, '0') +
+                            ' ms).'
+                    );
+                }
+            }
+
+            function stopRaf() {
+                if (rafId) {
+                    cancelAnimationFrame(rafId);
+                    rafId = 0;
+                }
+            }
+
+            function tick() {
+                updateSeekUiFromVideos();
+                maybeAutoSyncDriftOneFrame();
+                const anyPlaying = !videoLeft.paused || !videoRight.paused;
+                const anySeeking = videoLeft.seeking || videoRight.seeking;
+                if (anyPlaying || anySeeking) {
+                    rafId = requestAnimationFrame(tick);
+                } else {
+                    rafId = 0;
+                }
+            }
+
+            function setPlayingUi(playing) {
+                if (playing) {
+                    playStopBtn.textContent = 'Pause';
+                    playStopBtn.classList.add('transport-toggle--stop');
+                    seekBarWrap.classList.add('seek-bar-wrap--playing');
+                } else {
+                    playStopBtn.textContent = 'Play';
+                    playStopBtn.classList.remove('transport-toggle--stop');
+                    seekBarWrap.classList.remove('seek-bar-wrap--playing');
+                }
+            }
+
+            function bothReady() {
+                return getDuration(videoLeft) > 0 && getDuration(videoRight) > 0;
+            }
+
+            function pickWebMRecorderMimeType(withAudio) {
+                if (typeof MediaRecorder === 'undefined' || !MediaRecorder.isTypeSupported) return '';
+                const wantA = !!withAudio;
+                const candidates = wantA
+                    ? [
+                          'video/webm;codecs=vp9,opus',
+                          'video/webm;codecs=vp8,opus',
+                          'video/webm;codecs=vp9',
+                          'video/webm;codecs=vp8',
+                          'video/webm',
+                      ]
+                    : ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
+                for (let i = 0; i < candidates.length; i++) {
+                    if (MediaRecorder.isTypeSupported(candidates[i])) return candidates[i];
+                }
+                return '';
+            }
+
+            /** 長辺を抑えてメモリ・エンコード負荷を下げる（偶数ピクセル） */
+            function computePipExportCanvasSize(vw, vh, maxLongEdge) {
+                const cap = maxLongEdge > 0 ? maxLongEdge : 1920;
+                let w = vw | 0;
+                let h = vh | 0;
+                if (w < 2 || h < 2) return null;
+                const long = Math.max(w, h);
+                if (long > cap) {
+                    const s = cap / long;
+                    w = Math.round(w * s);
+                    h = Math.round(h * s);
+                }
+                w = Math.max(2, w);
+                h = Math.max(2, h);
+                if (w % 2) w--;
+                if (h % 2) h--;
+                return { w: w, h: h };
+            }
+
+            function drawPipExportFrame(ctx, cw, ch, pipGeom) {
+                const pg = pipGeom;
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(0, 0, cw, ch);
+                if (videoRight.readyState >= 2) {
+                    ctx.drawImage(videoRight, 0, 0, cw, ch);
+                }
+                if (videoLeft.readyState >= 2 && pg.pipW >= 2 && pg.pipH >= 2) {
+                    ctx.drawImage(videoLeft, pg.pipX, pg.pipY, pg.pipW, pg.pipH);
+                }
+            }
+
+            function buildPipGeometry(cw, ch) {
+                const lw = videoLeft.videoWidth | 0;
+                const lh = videoLeft.videoHeight | 0;
+                let pipW = Math.round(cw * 0.24);
+                let pipH = lh > 0 && lw > 0 ? Math.round((pipW * lh) / lw) : Math.round(cw * 0.135);
+                const maxPipH = Math.round(ch * 0.42);
+                if (pipH > maxPipH && lh > 0 && lw > 0) {
+                    pipH = maxPipH;
+                    pipW = Math.round((pipH * lw) / lh);
+                }
+                const margin = Math.max(6, Math.round(cw * 0.015));
+                const pipX = cw - pipW - margin;
+                const pipY = ch - pipH - margin;
+                return { pipW: pipW, pipH: pipH, pipX: pipX, pipY: pipY };
+            }
+
+            function drawExportTcOverlay(ctx, cw, ch, text) {
+                if (!text) return;
+                const pad = Math.max(6, Math.round(Math.min(cw, ch) * 0.014));
+                const fontPx = Math.max(12, Math.min(26, Math.round(cw * 0.028)));
+                ctx.save();
+                ctx.font = '700 ' + fontPx + 'px Consolas, Monaco, "Cascadia Mono", monospace';
+                const tw = Math.ceil(ctx.measureText(text).width);
+                const th = Math.round(fontPx * 1.38);
+                const bx = pad;
+                const by = ch - pad - th;
+                ctx.fillStyle = 'rgba(8, 10, 18, 0.82)';
+                ctx.fillRect(bx - 6, by - 4, tw + 12, th + 8);
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(bx - 5.5, by - 3.5, tw + 11, th + 7);
+                ctx.fillStyle = '#fff4e8';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.92)';
+                ctx.shadowBlur = 3;
+                ctx.fillText(text, bx, by + th / 2 + 1);
+                ctx.shadowBlur = 0;
+                ctx.restore();
+            }
+
+            function drawExportFrameBundle(mode, ctx, cw, ch, pipGeom, burnTc, exportDur) {
+                if (mode === 'compare-pip') {
+                    drawPipExportFrame(ctx, cw, ch, pipGeom);
+                    if (burnTc) {
+                        const t = Math.max(videoLeft.currentTime || 0, videoRight.currentTime || 0);
+                        drawExportTcOverlay(
+                            ctx,
+                            cw,
+                            ch,
+                            formatTimecodeForTransport(Math.min(t, exportDur))
+                        );
+                    }
+                } else if (mode === 'solo-old') {
+                    ctx.fillStyle = '#000000';
+                    ctx.fillRect(0, 0, cw, ch);
+                    if (videoLeft.readyState >= 2) {
+                        ctx.drawImage(videoLeft, 0, 0, cw, ch);
+                    }
+                    if (burnTc) {
+                        const t = videoLeft.currentTime || 0;
+                        const d = getDuration(videoLeft);
+                        const cl = d > 0 ? Math.min(t, d) : t;
+                        drawExportTcOverlay(ctx, cw, ch, formatTimecodeForSide(cl, 'left'));
+                    }
+                } else {
+                    ctx.fillStyle = '#000000';
+                    ctx.fillRect(0, 0, cw, ch);
+                    if (videoRight.readyState >= 2) {
+                        ctx.drawImage(videoRight, 0, 0, cw, ch);
+                    }
+                    if (burnTc) {
+                        const t = videoRight.currentTime || 0;
+                        const d = getDuration(videoRight);
+                        const cl = d > 0 ? Math.min(t, d) : t;
+                        drawExportTcOverlay(ctx, cw, ch, formatTimecodeForSide(cl, 'right'));
+                    }
+                }
+            }
+
+            function setExportBlockingVisible(visible) {
+                const root = exportBlockingOverlay;
+                if (!root) return;
+                if (visible) {
+                    root.hidden = false;
+                    root.setAttribute('aria-hidden', 'false');
+                    if (exportBlockingSub) {
+                        exportBlockingSub.textContent = '';
+                    }
+                    try {
+                        root.focus({ preventScroll: true });
+                    } catch (_) {}
+                } else {
+                    root.hidden = true;
+                    root.setAttribute('aria-hidden', 'true');
+                    if (exportBlockingSub) {
+                        exportBlockingSub.textContent = '';
+                    }
+                }
+            }
+
+            function isSoloTcNoticeOpen() {
+                return !!(soloTcNoticeOverlay && !soloTcNoticeOverlay.hidden);
+            }
+
+            function hideSoloTcNoticeDialog() {
+                if (!soloTcNoticeOverlay) return;
+                soloTcNoticeOverlay.hidden = true;
+                soloTcNoticeOverlay.setAttribute('aria-hidden', 'true');
+                try {
+                    if (exportBurnTcCheckbox) {
+                        exportBurnTcCheckbox.focus({ preventScroll: true });
+                    }
+                } catch (_) {}
+            }
+
+            function showSoloTcNoticeDialog() {
+                if (!soloTcNoticeOverlay) return;
+                soloTcNoticeOverlay.hidden = false;
+                soloTcNoticeOverlay.setAttribute('aria-hidden', 'false');
+                try {
+                    if (soloTcNoticeOk) {
+                        soloTcNoticeOk.focus({ preventScroll: true });
+                    } else {
+                        soloTcNoticeOverlay.focus({ preventScroll: true });
+                    }
+                } catch (_) {}
+            }
+
+            function updateExportBlockingSub(text) {
+                if (exportBlockingSub && text != null) exportBlockingSub.textContent = text;
+            }
+
+            function tryCancelSilentWebmExportFromEsc() {
+                if (!pipExportActive) return;
+                pipExportUserCancel = true;
+                updateExportBlockingSub('Cancelling…');
+                if (currentExportRecorder && currentExportRecorder.state === 'recording') {
+                    try {
+                        currentExportRecorder.stop();
+                    } catch (_) {}
+                    return;
+                }
+                if (typeof pipExportEmergencyCleanup === 'function') {
+                    pipExportEmergencyCleanup();
+                }
+                pipExportUserCancel = false;
+                writeLog('Export WebM: Cancelled (Escape).');
+                flashSeekHint('Export', 'Cancelled', 'notice');
+            }
+
+            async function runSilentWebmExport() {
+                if (pipExportActive || !pipExportCanvas || !exportPipBtn) return;
+                if (!canExportWebm()) return;
+                pipExportUserCancel = false;
+                pipExportEmergencyCleanup = null;
+                const mode = getExportMode();
+                const burnTc = getExportBurnTc();
+                let vw;
+                let vh;
+                let fpsCap;
+                let exportDur;
+                if (mode === 'compare-pip') {
+                    vw = videoRight.videoWidth | 0;
+                    vh = videoRight.videoHeight | 0;
+                    fpsCap = Math.min(60, Math.max(24, masterFpsIntForTransport()));
+                    exportDur = masterDuration();
+                } else if (mode === 'solo-old') {
+                    vw = videoLeft.videoWidth | 0;
+                    vh = videoLeft.videoHeight | 0;
+                    fpsCap = Math.min(60, Math.max(24, roundedFpsForSide('left')));
+                    exportDur = getDuration(videoLeft);
+                } else {
+                    vw = videoRight.videoWidth | 0;
+                    vh = videoRight.videoHeight | 0;
+                    fpsCap = Math.min(60, Math.max(24, roundedFpsForSide('right')));
+                    exportDur = getDuration(videoRight);
+                }
+                const size = computePipExportCanvasSize(vw, vh, 1920);
+                if (!size) {
+                    writeLog('Export WebM: Could not read video resolution.');
+                    return;
+                }
+                const cw = size.w;
+                const ch = size.h;
+                pipExportCanvas.width = cw;
+                pipExportCanvas.height = ch;
+                const ctx = pipExportCanvas.getContext('2d', { alpha: false });
+                if (!ctx) {
+                    writeLog('Export WebM: Failed to acquire Canvas 2D context.');
+                    return;
+                }
+                ctx.imageSmoothingEnabled = true;
+                const pipGeom = mode === 'compare-pip' ? buildPipGeometry(cw, ch) : null;
+                let stream;
+                try {
+                    stream = pipExportCanvas.captureStream(fpsCap);
+                } catch (e) {
+                    writeLog('Export WebM: captureStream failed — ' + (e && e.message ? e.message : String(e)));
+                    return;
+                }
+                const videoTrack = stream.getVideoTracks()[0];
+                if (!videoTrack) {
+                    writeLog('Export WebM: No video track from canvas.captureStream().');
+                    return;
+                }
+
+                ensureWebAudioRouting();
+                let audioAttachNote = '';
+                const exportAudioMode = getAudioMode();
+                try {
+                    if (audioCtx && mediaSrcL && mediaSrcR) {
+                        if (audioCtx.state === 'suspended') {
+                            await audioCtx.resume();
+                        }
+                        const exportDest = audioCtx.createMediaStreamDestination();
+                        buildAudioGraph(exportAudioMode, exportDest);
+                        if (exportAudioMode !== 'mute') {
+                            const aTr = exportDest.stream.getAudioTracks()[0];
+                            if (aTr) {
+                                stream.addTrack(aTr);
+                            } else {
+                                restorePlaybackAudioRouting();
+                                audioAttachNote = ' (no audio track from Web Audio bus)';
+                            }
+                        } else {
+                            audioAttachNote = ' (Audio: Mute, video-only encode)';
+                        }
+                    } else {
+                        audioAttachNote = ' (Web Audio unavailable)';
+                    }
+                } catch (eA) {
+                    restorePlaybackAudioRouting();
+                    audioAttachNote =
+                        ' (audio bus failed: ' + (eA && eA.message ? eA.message : String(eA)) + ')';
+                }
+
+                if (audioAttachNote) {
+                    writeLog('Export WebM: Audio attach note' + audioAttachNote);
+                }
+
+                const exportStreamHasAudio = stream.getAudioTracks().length > 0;
+                const mime = pickWebMRecorderMimeType(exportStreamHasAudio);
+                if (!mime) {
+                    restorePlaybackAudioRouting();
+                    writeLog('Export WebM: MediaRecorder WebM not supported in this browser.');
+                    flashSeekHint('Export', 'Not supported', 'notice');
+                    return;
+                }
+
+                const recorderOpts = {
+                    mimeType: mime,
+                    videoBitsPerSecond: cw * ch > 2073600 ? 12000000 : 8000000,
+                };
+                if (exportStreamHasAudio) {
+                    recorderOpts.audioBitsPerSecond = 160000;
+                }
+
+                let recorder;
+                try {
+                    recorder = new MediaRecorder(stream, recorderOpts);
+                } catch (e) {
+                    restorePlaybackAudioRouting();
+                    writeLog('Export WebM: MediaRecorder constructor failed — ' + (e && e.message ? e.message : String(e)));
+                    flashSeekHint('Export', 'Failed', 'notice');
+                    return;
+                }
+                currentExportRecorder = recorder;
+                const chunks = [];
+                const modeEn =
+                    mode === 'compare-pip' ? 'PiP compare' : mode === 'solo-old' ? 'older only' : 'newer only';
+                const tcEn = burnTc ? 'with TC burn-in' : 'no TC burn-in';
+                const audioEn = audioModeLabel(getAudioMode());
+                pipExportActive = true;
+                setExportBlockingVisible(true);
+                updateExportBlockingSub('Preparing export…');
+                try {
+                    const ae = document.activeElement;
+                    if (ae && ae !== document.body && typeof ae.blur === 'function') {
+                        ae.blur();
+                    }
+                } catch (_) {}
+                updateControlsEnabled();
+                videoLeft.pause();
+                videoRight.pause();
+                stopRaf();
+                setPlayingUi(false);
+                applyTimeToVideos(0);
+                seekBar.value = '0';
+                currentTimeEl.textContent = formatTimecodeForTransport(0);
+                updateDriftAndOverlays();
+                await new Promise((r) => setTimeout(r, 80));
+                drawExportFrameBundle(mode, ctx, cw, ch, pipGeom, burnTc, exportDur);
+                let lastProgLog = 0;
+                let recorderStopError = null;
+                let pipUiCleaned = false;
+
+                function cleanupPipExportShell() {
+                    if (pipUiCleaned) return;
+                    pipUiCleaned = true;
+                    setExportBlockingVisible(false);
+                    if (pipExportRaf) {
+                        cancelAnimationFrame(pipExportRaf);
+                        pipExportRaf = 0;
+                    }
+                    try {
+                        stream.getTracks().forEach((t) => t.stop());
+                    } catch (_) {}
+                    restorePlaybackAudioRouting();
+                    videoLeft.pause();
+                    videoRight.pause();
+                    pipExportActive = false;
+                    exportPipBtn.textContent = EXPORT_WEBM_BTN_LABEL;
+                    updateControlsEnabled();
+                    updateSeekUiFromVideos();
+                    currentExportRecorder = null;
+                    pipExportEmergencyCleanup = null;
+                }
+                pipExportEmergencyCleanup = cleanupPipExportShell;
+
+                recorder.ondataavailable = (ev) => {
+                    if (ev.data && ev.data.size > 0) chunks.push(ev.data);
+                };
+                recorder.onerror = () => {
+                    if (!recorderStopError) recorderStopError = 'MediaRecorder reported an error.';
+                    try {
+                        if (recorder.state === 'recording') recorder.stop();
+                    } catch (_) {}
+                };
+                recorder.onstop = () => {
+                    cleanupPipExportShell();
+                    if (pipExportUserCancel) {
+                        pipExportUserCancel = false;
+                        writeLog('Export WebM: Cancelled (Escape).');
+                        flashSeekHint('Export', 'Cancelled', 'notice');
+                        return;
+                    }
+                    if (recorderStopError) {
+                        writeLog('Export WebM: ' + recorderStopError);
+                        flashSeekHint('Export', 'Failed', 'notice');
+                        return;
+                    }
+                    const blob = new Blob(chunks, { type: mime.split(';')[0] || 'video/webm' });
+                    if (!blob.size) {
+                        writeLog('Export WebM: Output size is zero.');
+                        flashSeekHint('Export', 'Failed', 'notice');
+                        return;
+                    }
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+                    a.href = url;
+                    let fname = 'mga-export-';
+                    if (mode === 'compare-pip') fname += 'compare-pip-';
+                    else if (mode === 'solo-old') fname += 'solo-old-';
+                    else fname += 'solo-new-';
+                    if (burnTc) fname += 'tc-';
+                    fname += stamp + '.webm';
+                    a.download = fname;
+                    a.rel = 'noopener';
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    setTimeout(() => URL.revokeObjectURL(url), 4000);
+                    writeLog(
+                        'Export WebM: Done (' +
+                            modeEn +
+                            ', ' +
+                            tcEn +
+                            ', ' +
+                            (exportStreamHasAudio ? 'audio ' + audioEn : 'no audio') +
+                            ', ' +
+                            Math.round(blob.size / 1024) +
+                            ' KiB, ' +
+                            cw +
+                            '×' +
+                            ch +
+                            ')'
+                    );
+                    flashSeekHint('Export', 'Download started', 'notice');
+                };
+                try {
+                    recorder.start(400);
+                } catch (e) {
+                    recorderStopError = 'record.start failed — ' + (e && e.message ? e.message : String(e));
+                    cleanupPipExportShell();
+                    writeLog('Export WebM: ' + recorderStopError);
+                    flashSeekHint('Export', 'Failed', 'notice');
+                    return;
+                }
+                updateExportBlockingSub('Recording… 0%');
+                writeLog(
+                    'Export WebM: Started (' +
+                        modeEn +
+                        ', ' +
+                        tcEn +
+                        ', audio ' +
+                        audioEn +
+                        (exportStreamHasAudio ? ' -> export bus' : ' (video-only)') +
+                        ', ~' +
+                        fpsCap +
+                        ' fps target, duration ' +
+                        formatTimecodeForTransport(exportDur) +
+                        ', real-time encode)'
+                );
+                {
+                    let playLeftOk = false;
+                    try {
+                        await videoLeft.play();
+                        playLeftOk = !videoLeft.paused;
+                    } catch (_) {
+                        playLeftOk = false;
+                    }
+                    let playRightOk = false;
+                    try {
+                        await videoRight.play();
+                        playRightOk = !videoRight.paused;
+                    } catch (_) {
+                        playRightOk = false;
+                    }
+                    const am = exportStreamHasAudio ? getAudioMode() : null;
+                    const audioNeedL = !!(am && (am === 'split-mono' || am === 'old-stereo'));
+                    const audioNeedR = !!(am && (am === 'split-mono' || am === 'new-stereo'));
+                    const videoNeedL = mode === 'compare-pip' || mode === 'solo-old';
+                    const videoNeedR = mode === 'compare-pip' || mode === 'solo-new';
+                    const needL = videoNeedL || audioNeedL;
+                    const needR = videoNeedR || audioNeedR;
+                    const playOk = (!needL || playLeftOk) && (!needR || playRightOk);
+                    if (!playOk) {
+                        recorderStopError =
+                            'play() failed — could not start every video element required for this export mode and Audio option.';
+                        try {
+                            if (recorder.state === 'recording') recorder.stop();
+                        } catch (_) {}
+                        return;
+                    }
+                }
+                setPlayingUi(true);
+                if (!rafId) rafId = requestAnimationFrame(tick);
+                const drawLoop = () => {
+                    if (!pipExportActive) return;
+                    drawExportFrameBundle(mode, ctx, cw, ch, pipGeom, burnTc, exportDur);
+                    let tProg;
+                    if (mode === 'compare-pip') {
+                        tProg = Math.max(videoLeft.currentTime || 0, videoRight.currentTime || 0);
+                    } else if (mode === 'solo-old') {
+                        tProg = videoLeft.currentTime || 0;
+                    } else {
+                        tProg = videoRight.currentTime || 0;
+                    }
+                    const now = performance.now();
+                    if (now - lastProgLog > 900) {
+                        lastProgLog = now;
+                        const pct =
+                            exportDur > 0 ? Math.min(100, Math.round((100 * tProg) / exportDur)) : 0;
+                        updateExportBlockingSub('Recording… ' + pct + '%');
+                    }
+                    if (tProg >= exportDur - 0.035) {
+                        pipExportRaf = 0;
+                        recorderStopError = null;
+                        try {
+                            if (recorder.state === 'recording') recorder.stop();
+                        } catch (e2) {
+                            recorderStopError = 'record.stop failed — ' + (e2 && e2.message ? e2.message : String(e2));
+                            cleanupPipExportShell();
+                            writeLog('Export WebM: ' + recorderStopError);
+                            flashSeekHint('Export', 'Failed', 'notice');
+                        }
+                        return;
+                    }
+                    pipExportRaf = requestAnimationFrame(drawLoop);
+                };
+                pipExportRaf = requestAnimationFrame(drawLoop);
+            }
+
+            function updateControlsEnabled() {
+                const readyTransport = bothReady();
+                const xl = pipExportActive;
+                seekBar.disabled = !readyTransport || xl;
+                playStopBtn.disabled = !readyTransport || xl;
+                if (exportModeSelect) exportModeSelect.disabled = xl;
+                if (exportBurnTcCheckbox) {
+                    if (isSoloExportMode()) {
+                        exportBurnTcCheckbox.checked = true;
+                    }
+                    exportBurnTcCheckbox.disabled = xl;
+                }
+                if (exportPipBtn) exportPipBtn.disabled = !canExportWebm() || xl;
+                if (!readyTransport) {
+                    setPlayingUi(false);
+                    stopRaf();
+                    driftRow.hidden = true;
+                } else {
+                    updateDriftAndOverlays();
+                }
+            }
+
+            function assignPairToVideos(olderFile, newerFile, opt) {
+                revokeAll();
+                fileLeft = olderFile;
+                fileRight = newerFile;
+                urlLeft = URL.createObjectURL(olderFile);
+                urlRight = URL.createObjectURL(newerFile);
+                videoLeft.src = urlLeft;
+                videoRight.src = urlRight;
+                nameLeft.textContent = olderFile.name;
+                nameRight.textContent = newerFile.name;
+                updatePanelInfoLine('left');
+                updatePanelInfoLine('right');
+                setLoaded(panelLeft, true);
+                setLoaded(panelRight, true);
+                if (!opt || !opt.skipPersist) {
+                    schedulePersistSession();
+                }
+                void refreshContainerFpsForCurrentFiles();
+                applyViewMode(getViewMode());
+            }
+
+            function reorderTwoLoadedByDate() {
+                if (!fileLeft || !fileRight) return;
+                if (compareFileByModifiedThenName(fileLeft, fileRight) <= 0) {
+                    writeLog('Reorder: order already correct (no swap)');
+                    void refreshContainerFpsForCurrentFiles();
+                    applyViewMode(getViewMode());
+                    return;
+                }
+                const tmpF = containerFps.left;
+                containerFps.left = containerFps.right;
+                containerFps.right = tmpF;
+                const tmp = fileLeft;
+                fileLeft = fileRight;
+                fileRight = tmp;
+                if (urlLeft) URL.revokeObjectURL(urlLeft);
+                if (urlRight) URL.revokeObjectURL(urlRight);
+                urlLeft = URL.createObjectURL(fileLeft);
+                urlRight = URL.createObjectURL(fileRight);
+                videoLeft.src = urlLeft;
+                videoRight.src = urlRight;
+                nameLeft.textContent = fileLeft.name;
+                nameRight.textContent = fileRight.name;
+                videoLeft.load();
+                videoRight.load();
+                writeLog('Reorder: swapped sides by file modified date');
+                schedulePersistSession();
+                refreshMasterFrameSec();
+                updatePanelInfoLine('left');
+                updatePanelInfoLine('right');
+                syncSeekMax();
+                updateSeekUiFromVideos();
+                void refreshContainerFpsForCurrentFiles();
+                applyViewMode(getViewMode());
+            }
+
+            // === 10. Web Audio（getAudioMode / buildAudioGraph / ensureWebAudioRouting）
+            function getAudioMode() {
+                const c = document.querySelector('input[name="audioMode"]:checked');
+                return c && c.value ? c.value : 'split-mono';
+            }
+
+            function buildAudioGraph(mode, outputNode) {
+                if (!audioCtx || !mediaSrcL || !mediaSrcR) return;
+                mediaSrcL.disconnect();
+                mediaSrcR.disconnect();
+                const dest = outputNode != null ? outputNode : audioCtx.destination;
+                const muteL = audioCtx.createGain();
+                const muteR = audioCtx.createGain();
+                muteL.gain.value = 0;
+                muteR.gain.value = 0;
+
+                if (mode === 'mute') {
+                    mediaSrcL.connect(muteL);
+                    muteL.connect(dest);
+                    mediaSrcR.connect(muteR);
+                    muteR.connect(dest);
+                    return;
+                }
+
+                if (mode === 'split-mono') {
+                    if (typeof audioCtx.createStereoPanner !== 'function') {
+                        mediaSrcL.connect(dest);
+                        mediaSrcR.connect(dest);
+                        return;
+                    }
+                    const sL = audioCtx.createChannelSplitter(2);
+                    const sR = audioCtx.createChannelSplitter(2);
+                    const gLL = audioCtx.createGain();
+                    gLL.gain.value = 0.5;
+                    const gLR = audioCtx.createGain();
+                    gLR.gain.value = 0.5;
+                    const gRL = audioCtx.createGain();
+                    gRL.gain.value = 0.5;
+                    const gRR = audioCtx.createGain();
+                    gRR.gain.value = 0.5;
+                    const panL = audioCtx.createStereoPanner();
+                    panL.pan.value = -1;
+                    const panR = audioCtx.createStereoPanner();
+                    panR.pan.value = 1;
+                    mediaSrcL.connect(sL);
+                    mediaSrcR.connect(sR);
+                    sL.connect(gLL, 0);
+                    sL.connect(gLR, 1);
+                    sR.connect(gRL, 0);
+                    sR.connect(gRR, 1);
+                    gLL.connect(panL);
+                    gLR.connect(panL);
+                    gRL.connect(panR);
+                    gRR.connect(panR);
+                    panL.connect(dest);
+                    panR.connect(dest);
+                    return;
+                }
+                if (mode === 'old-stereo') {
+                    mediaSrcL.connect(dest);
+                    mediaSrcR.connect(muteR);
+                    muteR.connect(dest);
+                    return;
+                }
+                if (mode === 'new-stereo') {
+                    mediaSrcL.connect(muteL);
+                    muteL.connect(dest);
+                    mediaSrcR.connect(dest);
+                }
+            }
+
+            function restorePlaybackAudioRouting() {
+                try {
+                    if (audioCtx && audioCtx.state !== 'closed' && mediaSrcL && mediaSrcR) {
+                        buildAudioGraph(getAudioMode());
+                    }
+                } catch (_) {}
+            }
+
+            function ensureWebAudioRouting() {
+                const Ctx = window.AudioContext || window.webkitAudioContext;
+                if (!Ctx) return;
+                if (!audioCtx) {
+                    try {
+                        audioCtx = new Ctx();
+                    } catch (_) {
+                        return;
+                    }
+                }
+                if (!mediaSrcL) {
+                    try {
+                        mediaSrcL = audioCtx.createMediaElementSource(videoLeft);
+                        mediaSrcR = audioCtx.createMediaElementSource(videoRight);
+                        webAudioWired = true;
+                    } catch (_) {
+                        if (audioCtx) {
+                            try {
+                                audioCtx.close();
+                            } catch (_e) {}
+                        }
+                        audioCtx = null;
+                        webAudioWired = false;
+                        mediaSrcL = null;
+                        mediaSrcR = null;
+                        return;
+                    }
+                }
+                try {
+                    buildAudioGraph(getAudioMode());
+                } catch (_) {}
+            }
+
+            // === 11. ファイル割当・ドロップゾーン・ファイルピッカー
+            /** 左が空なら左、右が空なら右、両方埋まっていれば左のみ差し替え（右は未読み込みに戻す） */
+            function assignFiles(files) {
+                const videos = pickVideoFiles(files);
+                if (videos.length === 0) {
+                    writeLog('Open files: no playable video in selection (ignored)');
+                    return;
+                }
+
+                if (videos.length >= 2) {
+                    const pair = pickOldestAndNewest(videos);
+                    assignPairToVideos(pair[0], pair[1]);
+                    writeLog('Loaded pair: ' + pair[0].name + ' / ' + pair[1].name);
+                    return;
+                }
+
+                const f = videos[0];
+                if (urlLeft === null) {
+                    urlLeft = URL.createObjectURL(f);
+                    fileLeft = f;
+                    videoLeft.src = urlLeft;
+                    nameLeft.textContent = f.name;
+                    updatePanelInfoLine('left');
+                    setLoaded(panelLeft, true);
+                    writeLog('Loaded left: ' + f.name);
+                    schedulePersistSession();
+                    void refreshContainerFpsForCurrentFiles();
+                    applyViewMode(getViewMode());
+                } else if (urlRight === null) {
+                    urlRight = URL.createObjectURL(f);
+                    fileRight = f;
+                    videoRight.src = urlRight;
+                    nameRight.textContent = f.name;
+                    updatePanelInfoLine('right');
+                    setLoaded(panelRight, true);
+                    reorderTwoLoadedByDate();
+                    writeLog('Loaded right: ' + f.name);
+                    schedulePersistSession();
+                } else {
+                    revokeAll();
+                    urlLeft = URL.createObjectURL(f);
+                    fileLeft = f;
+                    videoLeft.src = urlLeft;
+                    nameLeft.textContent = f.name;
+                    updatePanelInfoLine('left');
+                    nameRight.textContent = 'Not Loaded';
+                    infoRight.hidden = true;
+                    infoRight.textContent = '';
+                    videoRight.removeAttribute('src');
+                    videoRight.load();
+                    setLoaded(panelLeft, true);
+                    setLoaded(panelRight, false);
+                    writeLog('Replaced left only (right cleared): ' + f.name);
+                    schedulePersistSession();
+                    void refreshContainerFpsForCurrentFiles();
+                    applyViewMode(getViewMode());
+                }
+            }
+
+            dropZone.addEventListener('dragenter', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.add('dragover');
+                dragHoverDepth++;
+                if (dragHoverDepth === 1) writeLog('Drop zone: drag enter (hover)');
+            });
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.add('dragover');
+            });
+            dropZone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dragHoverDepth = Math.max(0, dragHoverDepth - 1);
+                if (dragHoverDepth === 0) {
+                    dropZone.classList.remove('dragover');
+                    writeLog('Drop zone: drag leave');
+                }
+            });
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dragHoverDepth = 0;
+                dropZone.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files && files.length) {
+                    const names = Array.from(files)
+                        .map((f) => f.name)
+                        .join(', ');
+                    writeLog('Drop zone: dropped ' + files.length + ' item(s): ' + names);
+                } else {
+                    writeLog('Drop zone: drop with no files');
+                }
+                assignFiles(files);
+            });
+
+            dropZone.addEventListener('click', () => {
+                writeLog('Drop zone: click -> open file picker');
+                filePicker.click();
+            });
+            dropZone.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    writeLog('Drop zone: Enter -> open file picker');
+                    filePicker.click();
+                }
+            });
+
+            filePicker.addEventListener('change', () => {
+                if (filePicker.files && filePicker.files.length) {
+                    const names = Array.from(filePicker.files)
+                        .map((f) => f.name)
+                        .join(', ');
+                    writeLog('File picker: selected ' + filePicker.files.length + ' file(s): ' + names);
+                    assignFiles(filePicker.files);
+                }
+                filePicker.value = '';
+            });
+
+            document.addEventListener('dragover', (e) => {
+                if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files')) {
+                    e.preventDefault();
+                }
+            });
+            document.addEventListener('drop', (e) => {
+                if (!e.dataTransfer || !e.dataTransfer.files || e.dataTransfer.files.length === 0) return;
+                if (isTypingTarget(e.target)) return;
+                if (dropZone.contains(e.target)) return;
+                e.preventDefault();
+                e.stopPropagation();
+                const names = Array.from(e.dataTransfer.files)
+                    .map((f) => f.name)
+                    .join(', ');
+                writeLog('Document drop: ' + e.dataTransfer.files.length + ' item(s): ' + names);
+                assignFiles(e.dataTransfer.files);
+            });
+
+            // === 12. メディアイベント・トランスポート UI・キーボード・起動（boot）
+            function onMetaFor(side) {
+                updatePanelInfoLine(side);
+                if (pendingRestoreTime != null && Number.isFinite(pendingRestoreTime) && bothReady()) {
+                    const dur = masterDuration();
+                    const t = Math.max(0, Math.min(pendingRestoreTime, dur - 0.001));
+                    pendingRestoreTime = null;
+                    applyTimeToVideos(t);
+                    seekBar.value = String(t);
+                    currentTimeEl.textContent = formatTimecodeForTransport(t);
+                    updateDriftAndOverlays();
+                    writeLog('Restored transport to ' + formatTimecodeForTransport(t));
+                }
+                syncSeekMax();
+                updateControlsEnabled();
+            }
+            videoLeft.addEventListener('loadedmetadata', () => onMetaFor('left'));
+            videoRight.addEventListener('loadedmetadata', () => onMetaFor('right'));
+            videoLeft.addEventListener('loadeddata', () => onMetaFor('left'));
+            videoRight.addEventListener('loadeddata', () => onMetaFor('right'));
+            videoLeft.addEventListener('durationchange', () => onMetaFor('left'));
+            videoRight.addEventListener('durationchange', () => onMetaFor('right'));
+
+            let durationProgressRaf = 0;
+            function onDurationMaybeProgress() {
+                if (durationProgressRaf) return;
+                durationProgressRaf = requestAnimationFrame(() => {
+                    durationProgressRaf = 0;
+                    if (bothReady()) return;
+                    syncSeekMax();
+                    updateControlsEnabled();
+                    updatePanelInfoLine('left');
+                    updatePanelInfoLine('right');
+                    updateDriftAndOverlays();
+                });
+            }
+            videoLeft.addEventListener('progress', onDurationMaybeProgress);
+            videoRight.addEventListener('progress', onDurationMaybeProgress);
+            document.querySelectorAll('input[name="audioMode"]').forEach((radio) => {
+                radio.addEventListener('change', async (ev) => {
+                    writePrefs();
+                    if (ev.isTrusted) {
+                        writeLog('Audio output: ' + audioModeLabel(getAudioMode()));
+                        flashSeekHint('Audio', audioModeLabel(getAudioMode()), 'notice');
+                    }
+                    if (mediaSrcL && mediaSrcR && audioCtx) {
+                        try {
+                            if (audioCtx.state === 'suspended') {
+                                await audioCtx.resume();
+                            }
+                            buildAudioGraph(getAudioMode());
+                        } catch (err) {
+                            writeLog('Audio route update error: ' + (err && err.message ? err.message : String(err)));
+                        }
+                    }
+                    schedulePersistSession();
+                    flashTransportOptBox('audio');
+                });
+            });
+
+            if (viewModeSelect) {
+                viewModeSelect.addEventListener('change', () => {
+                    applyLayoutSelection(null, 'Layout: ');
+                });
+            }
+
+            if (loopPlaybackCheckbox) {
+                loopPlaybackCheckbox.addEventListener('change', () => {
+                    logAndPersistLoopPlayback();
+                });
+            }
+
+            if (exportPipBtn) {
+                exportPipBtn.addEventListener('click', () => {
+                    void runSilentWebmExport();
+                });
+            }
+
+            if (exportModeSelect) {
+                exportModeSelect.addEventListener('change', () => {
+                    writePrefs();
+                    updateControlsEnabled();
+                });
+            }
+            if (exportBurnTcCheckbox) {
+                exportBurnTcCheckbox.addEventListener('change', () => {
+                    if (isSoloExportMode() && !exportBurnTcCheckbox.checked) {
+                        exportBurnTcCheckbox.checked = true;
+                        showSoloTcNoticeDialog();
+                        return;
+                    }
+                    writePrefs();
+                });
+            }
+            if (soloTcNoticeOverlay) {
+                soloTcNoticeOverlay.addEventListener('click', (e) => {
+                    if (e.target === soloTcNoticeOverlay) {
+                        hideSoloTcNoticeDialog();
+                    }
+                });
+            }
+            if (soloTcNoticeOk) {
+                soloTcNoticeOk.addEventListener('click', () => {
+                    hideSoloTcNoticeDialog();
+                });
+            }
+
+            document.addEventListener(
+                'wheel',
+                (ev) => {
+                    if (pipExportActive) ev.preventDefault();
+                },
+                { passive: false, capture: true }
+            );
+            document.addEventListener(
+                'touchmove',
+                (ev) => {
+                    if (pipExportActive) ev.preventDefault();
+                },
+                { passive: false, capture: true }
+            );
+
+            seekBar.addEventListener('pointerdown', () => {
+                isSeeking = true;
+                writeLog('Seek bar: grab (scrub start)');
+            });
+            ['pointerup', 'pointercancel'].forEach((ev) => {
+                seekBar.addEventListener(ev, () => {
+                    isSeeking = false;
+                    const t = parseFloat(seekBar.value) || 0;
+                    writeLog('Seek bar: release at ' + formatTimecodeForTransport(t));
+                    flashSeekHint('Scrub', formatTimecodeForTransport(t));
+                    updateSeekUiFromVideos();
+                    if (!videoLeft.paused || !videoRight.paused) {
+                        if (!rafId) rafId = requestAnimationFrame(tick);
+                    }
+                    if (document.activeElement === seekBar) {
+                        seekBar.blur();
+                    }
+                    writePrefs();
+                    schedulePersistSession();
+                });
+            });
+
+            seekBar.addEventListener('input', () => {
+                const t = parseFloat(seekBar.value);
+                applyTimeToVideos(t);
+                currentTimeEl.textContent = formatTimecodeForTransport(t);
+                updateDriftAndOverlays();
+                logSeekBarInputThrottled(t);
+                flashSeekScrubThrottled(t);
+            });
+
+            /** シーク後に左右を再生（キー / Numpad ジャンプで止まったとき用。再生ボタンからも利用） */
+            async function resumeTransportPlaybackAfterSeek() {
+                if (!bothReady()) return;
+                ensureWebAudioRouting();
+                if (audioCtx && audioCtx.state === 'suspended') {
+                    try {
+                        await audioCtx.resume();
+                    } catch (_) {}
+                }
+                releaseStuckEnded();
+                try {
+                    await videoLeft.play();
+                    await videoRight.play();
+                    setPlayingUi(true);
+                    if (!rafId) rafId = requestAnimationFrame(tick);
+                } catch (err) {
+                    writeLog(
+                        'Transport: resume after seek failed — ' +
+                            (err && err.message ? err.message : String(err))
+                    );
+                    videoLeft.pause();
+                    videoRight.pause();
+                    setPlayingUi(false);
+                }
+            }
+
+            playStopBtn.addEventListener('click', async () => {
+                if (!bothReady()) return;
+                const playing = !videoLeft.paused || !videoRight.paused;
+                if (playing) {
+                    writeLog('Transport: pause (button)');
+                    videoLeft.pause();
+                    videoRight.pause();
+                    setPlayingUi(false);
+                    stopRaf();
+                    updateSeekUiFromVideos();
+                    writePrefs();
+                    schedulePersistSession();
+                } else {
+                    writeLog('Transport: play (button)');
+                    applyTimeToVideos(parseFloat(seekBar.value));
+                    await resumeTransportPlaybackAfterSeek();
+                }
+            });
+
+            videoLeft.addEventListener('pause', () => {
+                if (videoRight.paused) {
+                    setPlayingUi(false);
+                }
+            });
+            videoRight.addEventListener('pause', () => {
+                if (videoLeft.paused) {
+                    setPlayingUi(false);
+                }
+            });
+            videoLeft.addEventListener('play', () => {
+                if (!videoLeft.paused || !videoRight.paused) {
+                    setPlayingUi(true);
+                    if (!rafId) rafId = requestAnimationFrame(tick);
+                }
+            });
+            videoRight.addEventListener('play', () => {
+                if (!videoLeft.paused || !videoRight.paused) {
+                    setPlayingUi(true);
+                    if (!rafId) rafId = requestAnimationFrame(tick);
+                }
+            });
+
+            function onVideoEnded(ev) {
+                if (pipExportActive) return;
+                const v = ev.target;
+                const dL = getDuration(videoLeft);
+                const dR = getDuration(videoRight);
+                const masterEnd = Math.max(dL, dR);
+                const d = getDuration(v);
+                if (d < masterEnd - 1e-3) {
+                    return;
+                }
+                if (getLoopPlaybackEnabled()) {
+                    writeLog('Playback: loop restart (head)');
+                    applyTimeToVideos(0);
+                    seekBar.value = '0';
+                    currentTimeEl.textContent = formatTimecodeForTransport(0);
+                    updateDriftAndOverlays();
+                    writePrefs();
+                    schedulePersistSession();
+                    void resumeTransportPlaybackAfterSeek();
+                    return;
+                }
+                videoLeft.pause();
+                videoRight.pause();
+                stopRaf();
+                setPlayingUi(false);
+                updateSeekUiFromVideos();
+                writeLog('Playback: end reached (transport stopped)');
+            }
+            videoLeft.addEventListener('ended', onVideoEnded);
+            videoRight.addEventListener('ended', onVideoEnded);
+
+            window.addEventListener('keydown', (e) => {
+                if (isSoloTcNoticeOpen()) {
+                    if (e.code === 'Escape') {
+                        e.preventDefault();
+                        hideSoloTcNoticeDialog();
+                    }
+                    return;
+                }
+                if (pipExportActive) {
+                    if (e.code === 'Escape') {
+                        e.preventDefault();
+                        tryCancelSilentWebmExportFromEsc();
+                        return;
+                    }
+                    e.preventDefault();
+                    return;
+                }
+                if (isTypingTarget(e.target)) return;
+
+                if (document.activeElement === seekBar) {
+                    const appKey =
+                        e.code === 'Space' ||
+                        e.code === 'ArrowLeft' ||
+                        e.code === 'ArrowRight' ||
+                        /^Numpad[0-9]$/.test(e.code) ||
+                        e.code === 'KeyB' ||
+                        e.code === 'KeyO' ||
+                        e.code === 'KeyN' ||
+                        e.code === 'KeyM' ||
+                        e.code === 'KeyV' ||
+                        e.code === 'KeyL';
+                    if (appKey) seekBar.blur();
+                }
+
+                const isArrowKey = e.code === 'ArrowLeft' || e.code === 'ArrowRight';
+                if (e.repeat && !isArrowKey) return;
+
+                const audioByKey = { KeyB: 'split-mono', KeyO: 'old-stereo', KeyN: 'new-stereo', KeyM: 'mute' };
+                if (
+                    !e.repeat &&
+                    !e.ctrlKey &&
+                    !e.altKey &&
+                    !e.metaKey &&
+                    !e.shiftKey &&
+                    Object.prototype.hasOwnProperty.call(audioByKey, e.code)
+                ) {
+                    e.preventDefault();
+                    const mode = audioByKey[e.code];
+                    const rad = document.querySelector('input[name="audioMode"][value="' + mode + '"]');
+                    if (rad) {
+                        rad.checked = true;
+                        writeLog('Keyboard: ' + e.code + ' -> ' + audioModeLabel(mode));
+                        flashSeekHint('Audio', audioModeLabel(mode), 'notice');
+                        rad.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                    return;
+                }
+
+                if (
+                    !e.repeat &&
+                    !e.ctrlKey &&
+                    !e.altKey &&
+                    !e.metaKey &&
+                    !e.shiftKey &&
+                    e.code === 'KeyV'
+                ) {
+                    if (!viewModeSelect) return;
+                    e.preventDefault();
+                    const cur = getViewMode();
+                    const i = Math.max(0, VIEW_MODE_VALUES.indexOf(cur));
+                    const next = VIEW_MODE_VALUES[(i + 1) % VIEW_MODE_VALUES.length];
+                    applyLayoutSelection(next, 'Keyboard: KeyV -> ');
+                    return;
+                }
+
+                if (
+                    !e.repeat &&
+                    !e.ctrlKey &&
+                    !e.altKey &&
+                    !e.metaKey &&
+                    !e.shiftKey &&
+                    e.code === 'KeyL'
+                ) {
+                    if (!loopPlaybackCheckbox) return;
+                    e.preventDefault();
+                    loopPlaybackCheckbox.checked = !loopPlaybackCheckbox.checked;
+                    logAndPersistLoopPlayback();
+                    return;
+                }
+
+                const numpadSeekDigit = {
+                    Numpad0: 0,
+                    Numpad1: 1,
+                    Numpad2: 2,
+                    Numpad3: 3,
+                    Numpad4: 4,
+                    Numpad5: 5,
+                    Numpad6: 6,
+                    Numpad7: 7,
+                    Numpad8: 8,
+                    Numpad9: 9,
+                };
+                if (Object.prototype.hasOwnProperty.call(numpadSeekDigit, e.code)) {
+                    if (e.repeat) return;
+                    if (!bothReady()) return;
+                    e.preventDefault();
+                    const d = numpadSeekDigit[e.code];
+                    const dur = masterDuration();
+                    const target = Math.max(0, Math.min(dur - 0.001, (d / 10) * dur));
+                    const wasPlaying = !videoLeft.paused || !videoRight.paused;
+                    applyTimeToVideos(target);
+                    seekBar.value = String(target);
+                    currentTimeEl.textContent = formatTimecodeForTransport(target);
+                    updateDriftAndOverlays();
+                    writePrefs();
+                    schedulePersistSession();
+                    writeLog(
+                        'Seek keyboard: Numpad ' +
+                            d +
+                            ' -> ' +
+                            formatTimecodeForTransport(target) +
+                            ' (decile ' +
+                            d +
+                            '/10)'
+                    );
+                    flashSeekHint('Jump ' + d + '/10', formatTimecodeForTransport(target));
+                    if (wasPlaying) void resumeTransportPlaybackAfterSeek();
+                    return;
+                }
+
+                if (e.code === 'Space') {
+                    if (e.repeat) return;
+                    e.preventDefault();
+                    if (!playStopBtn.disabled) {
+                        writeLog('Keyboard: Space -> transport toggle');
+                        playStopBtn.click();
+                    }
+                    return;
+                }
+
+                if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') {
+                    if (!bothReady()) return;
+                    e.preventDefault();
+                    const wasPlaying = !videoLeft.paused || !videoRight.paused;
+                    const dur = masterDuration();
+                    const dir = e.code === 'ArrowRight' ? 1 : -1;
+                    let stepSec;
+                    if ((e.ctrlKey || e.metaKey) && e.shiftKey) {
+                        stepSec = 10;
+                    } else if (e.ctrlKey || e.metaKey) {
+                        stepSec = 5;
+                    } else if (e.shiftKey) {
+                        stepSec = 1;
+                    } else {
+                        stepSec = masterFrameSec;
+                    }
+                    const oneFrameStep = !e.shiftKey && !e.ctrlKey && !e.metaKey;
+                    if (oneFrameStep && wasPlaying) {
+                        videoLeft.pause();
+                        videoRight.pause();
+                        setPlayingUi(false);
+                        stopRaf();
+                        updateSeekUiFromVideos();
+                    }
+                    let t = (parseFloat(seekBar.value) || 0) + dir * stepSec;
+                    t = Math.max(0, Math.min(dur - 0.001, t));
+                    applyTimeToVideos(t);
+                    seekBar.value = String(t);
+                    currentTimeEl.textContent = formatTimecodeForTransport(t);
+                    updateDriftAndOverlays();
+                    writePrefs();
+                    schedulePersistSession();
+                    let stepLabel;
+                    if ((e.ctrlKey || e.metaKey) && e.shiftKey) {
+                        stepLabel = 'Ctrl+Shift ±10s';
+                    } else if (e.ctrlKey || e.metaKey) {
+                        stepLabel = 'Ctrl ±5s';
+                    } else if (e.shiftKey) {
+                        stepLabel = 'Shift ±1s';
+                    } else {
+                        stepLabel = 'Frame ±1f';
+                    }
+                    const arrow = e.code === 'ArrowRight' ? 'ArrowRight' : 'ArrowLeft';
+                    const line =
+                        'Seek keyboard: ' +
+                        arrow +
+                        ' (' +
+                        stepLabel +
+                        ') -> ' +
+                        formatTimecodeForTransport(t) +
+                        (e.repeat ? ' (repeat)' : '');
+                    if (!e.repeat) {
+                        writeLog(line);
+                    } else {
+                        logArrowSeekDebounced(line);
+                    }
+                    const sym = dir > 0 ? '→' : '←';
+                    let deltaTxt;
+                    if ((e.ctrlKey || e.metaKey) && e.shiftKey) {
+                        deltaTxt = dir > 0 ? '+10s' : '−10s';
+                    } else if (e.ctrlKey || e.metaKey) {
+                        deltaTxt = dir > 0 ? '+5s' : '−5s';
+                    } else if (e.shiftKey) {
+                        deltaTxt = dir > 0 ? '+1s' : '−1s';
+                    } else {
+                        deltaTxt = dir > 0 ? '+1f' : '−1f';
+                    }
+                    flashSeekHint(sym, deltaTxt);
+                    if (!oneFrameStep && wasPlaying) void resumeTransportPlaybackAfterSeek();
+                }
+            });
+
+            syncSeekMax();
+            updateControlsEnabled();
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'hidden') {
+                    writePrefs();
+                    persistSessionToStorage()
+                        .then(() => writeLog('Session: persisted (tab hidden)'))
+                        .catch((err) =>
+                            writeLog(
+                                'Session: persist failed — ' +
+                                    (err && err.message ? err.message : String(err))
+                            )
+                        );
+                }
+            });
+
+            (async function boot() {
+                try {
+                    await restoreSessionFromStorage();
+                } catch (e) {
+                    writeLog('Session restore: ' + (e && e.message ? e.message : String(e)));
+                }
+                syncSeekMax();
+                updateControlsEnabled();
+            })();
+        })();
+    </script>
+</body>
+</html>
