@@ -211,6 +211,7 @@
     <details class="app-doc-fold">
         <summary class="app-doc-fold__summary" id="app-manual-source-heading">ソースコードを改変する場合</summary>
         <div class="app-doc-fold__body app-manual">
+            <p>改変用のソースは <a href="https://github.com/mga-ueda/MGA-Movie-Compare-Player" target="_blank" rel="noopener noreferrer">GitHub リポジトリ（mga-ueda/MGA-Movie-Compare-Player）</a> から取得できます（<code>Code</code> → <code>Download ZIP</code> または <code>git clone</code>）。</p>
             <h3>ソースの読み方と、ブラウザへの保存（キーとフィールド）</h3>
             <ul>
                 <li>スクリプトは <code>index.html</code> 末尾の <code>&lt;script&gt;</code> 順（<code>js/dom-refs.js</code>（IIFE 開始・DOM 参照）→ … → <code>js/events-boot.js</code>（イベント・起動））で読み込まれ、単一の即時関数として実行されます。<code>js/dom-refs.js</code> 先頭に読み込み順と改造ポイントの目安があります。大きな処理は各ファイル内の <code>// === …</code> 区切りコメントでブロック化されているので、エディタで <code>===</code> を検索するとたどれます。UI は <code>index.html</code> のトランスポート付近の HTML と、<code>js/</code> 内の状態・イベント処理が中心です。</li>
