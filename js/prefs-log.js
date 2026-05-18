@@ -161,7 +161,6 @@
                 LS_PREFS_KEY,
                 JSON.stringify({
                     audioMode: getAudioMode(),
-                    transportTime: parseFloat(seekBar.value) || 0,
                     viewMode: getViewMode(),
                     loopPlayback: getLoopPlaybackEnabled(),
                     autoPlay: getAutoPlayEnabled(),

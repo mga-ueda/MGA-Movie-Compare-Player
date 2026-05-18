@@ -55,7 +55,6 @@
         const row = {
             v: 1,
             audioMode: getAudioMode(),
-            transportTime: parseFloat(seekBar.value) || 0,
             viewMode: getViewMode(),
             loopPlayback: getLoopPlaybackEnabled(),
         };
@@ -84,16 +83,6 @@
         await idbPut(IDB_KEY_LAST, row);
     }
 
-    function resolvePendingRestoreTime(prefs, row) {
-        if (row && typeof row.transportTime === 'number' && Number.isFinite(row.transportTime)) {
-            return row.transportTime;
-        }
-        if (prefs && typeof prefs.transportTime === 'number' && Number.isFinite(prefs.transportTime)) {
-            return prefs.transportTime;
-        }
-        return 0;
-    }
-
     async function restoreSessionFromStorage() {
         sessionRestoreListenersArmed = false;
         autoPlayAfterUserLoad = false;
@@ -119,8 +108,6 @@
         if (row.audioMode) applySavedAudioToRadios(row.audioMode);
         if (row.viewMode) applySavedViewMode(row.viewMode);
         if (typeof row.loopPlayback === 'boolean') applySavedLoopPlayback(row.loopPlayback);
-        pendingRestoreTime = resolvePendingRestoreTime(prefs, row);
-        primePendingRestoreTransportUi();
 
         if (row.lBlob && row.rBlob) {
             const fl = new File([row.lBlob], row.lName || 'left.mp4', {
