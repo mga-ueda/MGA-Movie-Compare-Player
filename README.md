@@ -2,22 +2,22 @@
 
 ブラウザ内だけで動画 2 本を比較再生・差分表示・WebM 書き出しができるウェブアプリです。
 
-**[▶ オンラインで使う（GitHub Pages）](https://mga-ueda.github.io/MGA-Movie-Compare-Player/)**
+<a href="https://mga-ueda.github.io/MGA-Movie-Compare-Player/" target="_blank" rel="noopener noreferrer"><strong>▶ オンラインで使う（GitHub Pages）</strong></a>
 
 | | |
 |---|---|
-| **GitHub Pages** | [**https://mga-ueda.github.io/MGA-Movie-Compare-Player/**](https://mga-ueda.github.io/MGA-Movie-Compare-Player/) — ダウンロード不要ですぐに利用できます |
+| **GitHub Pages** | <a href="https://mga-ueda.github.io/MGA-Movie-Compare-Player/" target="_blank" rel="noopener noreferrer">https://mga-ueda.github.io/MGA-Movie-Compare-Player/</a> — ダウンロード不要ですぐに利用できます |
 | **バージョン** | v1.01 |
 | **ローカル起動** | リポジトリの `index.html` をブラウザで開く（ビルド不要・`file://` 可） |
 | **推奨ブラウザ** | Google Chrome |
-| **リポジトリ** | [mga-ueda/MGA-Movie-Compare-Player](https://github.com/mga-ueda/MGA-Movie-Compare-Player) |
+| **リポジトリ** | <a href="https://github.com/mga-ueda/MGA-Movie-Compare-Player" target="_blank" rel="noopener noreferrer">mga-ueda/MGA-Movie-Compare-Player</a> |
 
 ---
 ## 特記事項
 
 - 本ページは**無償で提供される実験的なウェブアプリ**です。不具合を常時監視しておらず、ご利用中に問題が生じても原則として把握いたしません。あらかじめご了承のうえご利用ください。
 - 動画は**このブラウザ内でのみ**デコード・再生され、サーバーへは**いかなる情報もアップロードされません**。**Google Chrome** の利用を推奨します。ブラウザや形式によってはデコードできないことがあります。
-- **オンライン利用**：[GitHub Pages](https://mga-ueda.github.io/MGA-Movie-Compare-Player/)（`https://mga-ueda.github.io/MGA-Movie-Compare-Player/`）からも同じアプリを開けます。ダウンロード不要で、そのまま利用できます。
+- **オンライン利用**：<a href="https://mga-ueda.github.io/MGA-Movie-Compare-Player/" target="_blank" rel="noopener noreferrer">GitHub Pages</a>（`https://mga-ueda.github.io/MGA-Movie-Compare-Player/`）からも同じアプリを開けます。ダウンロード不要で、そのまま利用できます。
 - このページの **HTML・CSS・JavaScript** は目的を問わず**自由に改変・複製・再利用**して構いません（商用・社内ツールを含みます）。連絡も不要です。独自版を公開・配布する場合、フッターのコピーライト表記とリンクは**削除しても構いません**（未改変の配布では残すことを推奨しますが、フォークや大幅なカスタマイズでは必須ではありません）。
 - 本アプリは静的ファイル（`index.html`・`css/`・`js/` など）で構成されています。**ビルドやサーバーは不要**です。フォルダごと保存し、ルートの `index.html` をブラウザで開いてください（`file://` で動作します。favicon 等の外部 CDN 参照は環境により取得できない場合があります）。
 - ディスク上の元ファイルを書き出し直した場合でも、本アプリは**自動では再読み込みしません**。更新した動画を反映するには、**ドロップゾーン**または**映像エリア**へ再度ドロップしてください。前回セッションの復元はブラウザ内の保存データ（`IndexedDB`）に保存されたコピーを参照します（元ファイルのパスは保持しません）。ブラウザのストレージ整理により保存データが消えると、セッションは復元できません。
@@ -131,7 +131,7 @@
 ## 改変・再利用
 
 - このページの **HTML・CSS・JavaScript** は、目的を問わず**自由に改変・複製・再利用**して構いません（商用・社内ツールを含みます）。連絡も不要です。
-- ソースコードは [GitHub リポジトリ（mga-ueda/MGA-Movie-Compare-Player）](https://github.com/mga-ueda/MGA-Movie-Compare-Player) で公開しています（**Code** → **Download ZIP** または **git clone** で取得できます）。
+- ソースコードは <a href="https://github.com/mga-ueda/MGA-Movie-Compare-Player" target="_blank" rel="noopener noreferrer">GitHub リポジトリ（mga-ueda/MGA-Movie-Compare-Player）</a> で公開しています（**Code** → **Download ZIP** または **git clone** で取得できます）。
 - 独自版を公開・配布する場合、フッターのコピーライト表記とリンクは**削除しても構いません**（未改変の配布では残すことを推奨しますが、フォークや大幅なカスタマイズでは必須ではありません）。
 
 ## バージョン情報
