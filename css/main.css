@@ -154,6 +154,9 @@
             line-height: 1.45;
             max-width: 42rem;
         }
+        #main-drop-zone .drop-zone-note--privacy {
+            color: #ff3333;
+        }
 
         .compare-stage {
             margin: 0 auto 18px;
