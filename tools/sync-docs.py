@@ -192,27 +192,27 @@ def github_slug(title: str) -> str:
     return t
 
 
-def extract_h2_headings(markdown: str) -> list[str]:
-    return [m.group(1).strip() for m in re.finditer(r"^## (.+)$", markdown, re.MULTILINE)]
-
-
-def build_readme_toc(h2_titles: list[str]) -> str:
-    """README 専用の大項目目次（index.html / 取説 fragment には出さない）。"""
-    if not h2_titles:
-        return ""
+def build_readme_toc(fragment_md: str) -> str:
+    """README 専用の目次（## 大項目 + 使い方内 ###。バージョン情報は含めない）。"""
     lines = ["## 目次", ""]
-    for title in h2_titles:
-        lines.append(f"- [{title}](#{github_slug(title)})")
+    in_usage = False
+    for line in fragment_md.splitlines():
+        if line.startswith("## "):
+            title = line[3:].strip()
+            in_usage = title == "使い方"
+            lines.append(f"- [{title}](#{github_slug(title)})")
+        elif line.startswith("### ") and in_usage:
+            sub = line[4:].strip()
+            lines.append(f"  - [{sub}](#{github_slug(sub)})")
+    if len(lines) <= 2:
+        return ""
     lines.append("")
     return "\n".join(lines)
 
 
 def build_readme(fragment: str, version_label: str, changelog_md: str) -> str:
     fragment_md = fragment_to_markdown(fragment)
-    h2_titles = extract_h2_headings(fragment_md)
-    if "バージョン情報" not in h2_titles:
-        h2_titles.append("バージョン情報")
-    toc_md = build_readme_toc(h2_titles)
+    toc_md = build_readme_toc(fragment_md)
     return (
         README_INTRO.format(version_label=version_label, pages_url=GITHUB_PAGES_URL)
         + toc_md
