@@ -193,7 +193,7 @@ def github_slug(title: str) -> str:
 
 
 def build_readme_toc(fragment_md: str) -> str:
-    """README 専用の目次（## 大項目 + 使い方内 ###。バージョン情報は含めない）。"""
+    """README 専用の目次（## 大項目 + 使い方内 ### のみ階層化）。"""
     lines = ["## 目次", ""]
     in_usage = False
     for line in fragment_md.splitlines():
@@ -204,8 +204,7 @@ def build_readme_toc(fragment_md: str) -> str:
         elif line.startswith("### ") and in_usage:
             sub = line[4:].strip()
             lines.append(f"  - [{sub}](#{github_slug(sub)})")
-    if len(lines) <= 2:
-        return ""
+    lines.append(f"- [バージョン情報](#{github_slug('バージョン情報')})")
     lines.append("")
     return "\n".join(lines)
 
