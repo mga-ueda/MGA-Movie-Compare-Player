@@ -56,7 +56,6 @@ README_INTRO = """# MGA Movie Compare Player
 | **推奨ブラウザ** | Google Chrome |
 | **リポジトリ** | [mga-ueda/MGA-Movie-Compare-Player](https://github.com/mga-ueda/MGA-Movie-Compare-Player) |
 
----
 """
 
 
@@ -184,10 +183,41 @@ def fragment_to_markdown(fragment: str) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
+def github_slug(title: str) -> str:
+    """GitHub README 見出しアンカー用（github-slugger に近い簡易版）。"""
+    t = html.unescape(title).strip().lower()
+    t = re.sub(r"[\s_]+", "-", t)
+    t = re.sub(r"[^\w\-]", "", t, flags=re.UNICODE)
+    t = re.sub(r"-+", "-", t).strip("-")
+    return t
+
+
+def extract_h2_headings(markdown: str) -> list[str]:
+    return [m.group(1).strip() for m in re.finditer(r"^## (.+)$", markdown, re.MULTILINE)]
+
+
+def build_readme_toc(h2_titles: list[str]) -> str:
+    """README 専用の大項目目次（index.html / 取説 fragment には出さない）。"""
+    if not h2_titles:
+        return ""
+    lines = ["## 目次", ""]
+    for title in h2_titles:
+        lines.append(f"- [{title}](#{github_slug(title)})")
+    lines.append("")
+    return "\n".join(lines)
+
+
 def build_readme(fragment: str, version_label: str, changelog_md: str) -> str:
+    fragment_md = fragment_to_markdown(fragment)
+    h2_titles = extract_h2_headings(fragment_md)
+    if "バージョン情報" not in h2_titles:
+        h2_titles.append("バージョン情報")
+    toc_md = build_readme_toc(h2_titles)
     return (
         README_INTRO.format(version_label=version_label, pages_url=GITHUB_PAGES_URL)
-        + fragment_to_markdown(fragment)
+        + toc_md
+        + "\n---\n\n"
+        + fragment_md
         + "\n"
         + changelog_md
         + "\n"
