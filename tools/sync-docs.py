@@ -55,6 +55,7 @@ README_INTRO = """# MGA Movie Compare Player
 | **ローカル起動** | リポジトリの `index.html` をブラウザで開く（ビルド不要・`file://` 可） |
 | **推奨ブラウザ** | Google Chrome |
 | **リポジトリ** | [mga-ueda/MGA-Movie-Compare-Player](https://github.com/mga-ueda/MGA-Movie-Compare-Player) |
+| **ライセンス** | MIT License（全文は [LICENSE](LICENSE)） |
 
 """
 
