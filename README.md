@@ -2,15 +2,15 @@
 
 ブラウザ内だけで動画 2 本を比較再生・差分表示・WebM 書き出しができるウェブアプリです。
 
-<a href="https://mga-ueda.github.io/MGA-Movie-Compare-Player/" target="_blank" rel="noopener noreferrer"><strong>▶ オンラインで使う（GitHub Pages）</strong></a>
+**[▶ オンラインで使う（GitHub Pages）](https://mga-ueda.github.io/MGA-Movie-Compare-Player/)**
 
 | | |
 |---|---|
-| **GitHub Pages** | <a href="https://mga-ueda.github.io/MGA-Movie-Compare-Player/" target="_blank" rel="noopener noreferrer">https://mga-ueda.github.io/MGA-Movie-Compare-Player/</a> — ダウンロード不要ですぐに利用できます |
+| **GitHub Pages** | [https://mga-ueda.github.io/MGA-Movie-Compare-Player/](https://mga-ueda.github.io/MGA-Movie-Compare-Player/) — ダウンロード不要ですぐに利用できます |
 | **バージョン** | v1.01 |
 | **ローカル起動** | リポジトリの `index.html` をブラウザで開く（ビルド不要・`file://` 可） |
 | **推奨ブラウザ** | Google Chrome |
-| **リポジトリ** | <a href="https://github.com/mga-ueda/MGA-Movie-Compare-Player" target="_blank" rel="noopener noreferrer">mga-ueda/MGA-Movie-Compare-Player</a> |
+| **リポジトリ** | [mga-ueda/MGA-Movie-Compare-Player](https://github.com/mga-ueda/MGA-Movie-Compare-Player) |
 
 ---
 ## 特記事項
@@ -130,7 +130,7 @@
 ## 改変・再利用
 
 - このページの **HTML・CSS・JavaScript** は、目的を問わず**自由に改変・複製・再利用**して構いません（商用・社内ツールを含みます）。連絡も不要です。
-- ソースコードは <a href="https://github.com/mga-ueda/MGA-Movie-Compare-Player" target="_blank" rel="noopener noreferrer">GitHub リポジトリ（mga-ueda/MGA-Movie-Compare-Player）</a> で公開しています（**Code** → **Download ZIP** または **git clone** で取得できます）。
+- ソースコードは [GitHub リポジトリ（mga-ueda/MGA-Movie-Compare-Player）](https://github.com/mga-ueda/MGA-Movie-Compare-Player) で公開しています（**Code** → **Download ZIP** または **git clone** で取得できます）。
 - 独自版を公開・配布する場合、フッターのコピーライト表記とリンクは**削除しても構いません**（未改変の配布では残すことを推奨しますが、フォークや大幅なカスタマイズでは必須ではありません）。
 
 ## バージョン情報

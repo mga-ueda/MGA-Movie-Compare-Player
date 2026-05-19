@@ -46,15 +46,15 @@ README_INTRO = """# MGA Movie Compare Player
 
 ブラウザ内だけで動画 2 本を比較再生・差分表示・WebM 書き出しができるウェブアプリです。
 
-<a href="{pages_url}" target="_blank" rel="noopener noreferrer"><strong>▶ オンラインで使う（GitHub Pages）</strong></a>
+**[▶ オンラインで使う（GitHub Pages）]({pages_url})**
 
 | | |
 |---|---|
-| **GitHub Pages** | <a href="{pages_url}" target="_blank" rel="noopener noreferrer">{pages_url}</a> — ダウンロード不要ですぐに利用できます |
+| **GitHub Pages** | [{pages_url}]({pages_url}) — ダウンロード不要ですぐに利用できます |
 | **バージョン** | {version_label} |
 | **ローカル起動** | リポジトリの `index.html` をブラウザで開く（ビルド不要・`file://` 可） |
 | **推奨ブラウザ** | Google Chrome |
-| **リポジトリ** | <a href="https://github.com/mga-ueda/MGA-Movie-Compare-Player" target="_blank" rel="noopener noreferrer">mga-ueda/MGA-Movie-Compare-Player</a> |
+| **リポジトリ** | [mga-ueda/MGA-Movie-Compare-Player](https://github.com/mga-ueda/MGA-Movie-Compare-Player) |
 
 ---
 """
@@ -107,22 +107,13 @@ def inline_html_to_md(text: str) -> str:
     text = re.sub(r"<strong>(.*?)</strong>", r"**\1**", text, flags=re.DOTALL)
     text = re.sub(r"<code>(.*?)</code>", r"`\1`", text, flags=re.DOTALL)
     text = re.sub(r"<kbd>(.*?)</kbd>", r"`\1`", text, flags=re.DOTALL)
-
-    def link_repl(m: re.Match[str]) -> str:
-        href, attrs, inner = m.group(1), m.group(2), m.group(3)
-        label = html.unescape(re.sub(r"\s+", " ", inner)).strip()
-        if 'target="_blank"' in attrs or "target='_blank'" in attrs:
-            return (
-                f'<a href="{href}" target="_blank" rel="noopener noreferrer">{label}</a>'
-            )
-        return f"[{label}]({href})"
-
     text = re.sub(
-        r'<a\s+href="([^"]+)"([^>]*)>(.*?)</a>',
-        link_repl,
+        r'<a\s+href="([^"]+)"[^>]*>(.*?)</a>',
+        r"[\2](\1)",
         text,
         flags=re.DOTALL,
     )
+    text = re.sub(r"<[^>]+>", "", text)
     return html.unescape(re.sub(r"\s+", " ", text)).strip()
 
 
