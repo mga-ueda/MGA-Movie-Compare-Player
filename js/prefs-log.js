@@ -3,7 +3,7 @@
     function syncLogPanelHeightToShortcutGuide() {
         const guide = document.querySelector('.bottom-info .shortcut-guide');
         if (!guide || !logEl) return;
-        const h = Math.max(120, guide.offsetHeight);
+        const h = Math.max(148, guide.offsetHeight);
         logEl.style.height = h + 'px';
         logEl.style.minHeight = h + 'px';
         logEl.style.maxHeight = h + 'px';

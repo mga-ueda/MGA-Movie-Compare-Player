@@ -531,6 +531,7 @@
         const tcEn = burnTc ? 'with TC burn-in' : 'no TC burn-in';
         const audioEn = audioModeLabel(getAudioMode());
         pipExportActive = true;
+        resetPlaybackSpeedForExport();
         setExportBlockingVisible(true);
         updateExportBlockingSub('Preparing export…');
         try {
@@ -745,6 +746,7 @@
             exportBurnTcCheckbox.disabled = xl;
         }
         if (exportPipBtn) exportPipBtn.disabled = !canExportWebm() || xl;
+        updatePlaybackSpeedUi();
         if (!readyTransport) {
             setPlayingUi(false);
             stopRaf();
@@ -776,6 +778,7 @@
         }
         void refreshContainerFpsForCurrentFiles();
         applyViewMode(getViewMode());
+        applyPlaybackSpeedToVideos();
     }
 
     function reorderTwoLoadedByDate() {
@@ -811,5 +814,6 @@
         updateSeekUiFromVideos();
         void refreshContainerFpsForCurrentFiles();
         applyViewMode(getViewMode());
+        applyPlaybackSpeedToVideos();
     }
 

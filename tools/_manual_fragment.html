@@ -8,7 +8,7 @@
                 <li>本アプリは静的ファイル（<code>index.html</code>・<code>css/</code>・<code>js/</code> など）で構成されています。<strong>ビルドやサーバーは不要</strong>です。フォルダごと保存し、ルートの <code>index.html</code> をブラウザで開いてください（<code>file://</code> で動作します。favicon 等の外部 CDN 参照は環境により取得できない場合があります）。</li>
                 <li>動画は<strong>このブラウザ内でのみ</strong>デコード・再生され、サーバーへ<strong>アップロードされません</strong>。<strong>Google Chrome</strong> の利用を推奨します。ブラウザや形式によってはデコードできないことがあります。</li>
                 <li>ディスク上の元ファイルを書き出し直した場合でも、本アプリは<strong>自動では再読み込みしません</strong>。更新した動画を反映するには、<strong>ドロップゾーン</strong>または<strong>映像エリア</strong>へ再度ドロップしてください。前回セッションの復元はブラウザ内の保存データ（<code>IndexedDB</code>）に保存されたコピーを参照します（元ファイルのパスは保持しません）。ブラウザのストレージ整理により保存データが消えると、セッションは復元できません。</li>
-                <li>映像レイアウト・ループ・音声・<strong>Auto Play</strong>・<strong>Export</strong> 欄などの UI 設定は、次回開いたときにブラウザ内（<code>localStorage</code> 等）から復元されます。<strong>シークバー位置は保存されず</strong>、再読み込み時は常に先頭です。読み込んだ動画データのコピーもブラウザ内（<code>IndexedDB</code> 等）に保存されます。</li>
+                <li>映像レイアウト・ループ・<strong>Auto Play</strong>・音声・<strong>Export</strong> 欄などの UI 設定は、次回開いたときにブラウザ内（<code>localStorage</code> 等）から復元されます。<strong>再生速度（Speed）</strong>は保存されず、ページの<strong>再読み込み</strong>時は常に <strong>1x</strong> です。<strong>シークバー位置は保存されず</strong>、再読み込み時は常に先頭です。読み込んだ動画データのコピーもブラウザ内（<code>IndexedDB</code> 等）に保存されます。</li>
                 <li>書き出しファイルはブラウザ標準の <strong>WebM</strong> です。MP4 / MJPEG 等への変換や色の扱いは「使い方」の「<strong>書き出し（Exp WebM）とファイルについて</strong>」を参照してください。</li>
             </ul>
         </div>
@@ -24,13 +24,13 @@
                         画面上部の<strong>ドロップゾーン</strong>（または下の<strong>映像エリア</strong>）へ動画をドロップするか、ゾーンを<strong>クリックしてファイルを選択</strong>します（詳細は「<strong>ドロップゾーン（動画の読み込み）</strong>」）。
                     </li>
                     <li>
-                        トランスポートの <strong>Video</strong> で <strong>Side by Side</strong> / <strong>Difference</strong> / <strong>Overlay</strong>、<strong>Loop</strong> で終端後のループ有無、<strong>Auto Play</strong> で左右がそろったときの自動再生、<strong>Audio</strong> で <strong>Both</strong> / <strong>Older Only</strong> / <strong>Newer Only</strong> / <strong>Mute</strong> を選びます。
+                        トランスポートの <strong>1 段目</strong>で <strong>Video</strong>（<strong>Side by Side</strong> / <strong>Difference</strong> / <strong>Overlay</strong>）、<strong>Audio</strong>（<strong>Both</strong> / <strong>Older Only</strong> / <strong>Newer Only</strong> / <strong>Mute</strong>）、<strong>Export</strong> を選びます。<strong>2 段目</strong>で <strong>Speed</strong>（再生倍率）と <strong>Loop</strong>・<strong>Auto Play</strong> を調整します（詳細は各見出しを参照）。
                     </li>
                     <li>
                         <strong>Play / Pause</strong> とシークバー、またはキーボード（ページ中段の<strong>ショートカット一覧</strong>）で再生位置を調整します。動画の同期ズレは <strong>Playback Drift</strong> 行で確認できます。
                     </li>
                     <li>
-                        トランスポート最下行の <strong>Export</strong> でモードと <strong>With TC</strong> を選び、<strong>Exp WebM</strong> でブラウザ内録画の WebM をダウンロードします。書き出し中のオーバレイや <kbd>Esc</kbd> キャンセル、出力ファイルの扱いは「<strong>書き出し（Exp WebM）とファイルについて</strong>」を参照してください。
+                        トランスポート <strong>1 段目</strong>の <strong>Export</strong> でモードと <strong>With TC</strong> を選び、<strong>Exp WebM</strong> でブラウザ内録画の WebM をダウンロードします。書き出し中のオーバレイや <kbd>Esc</kbd> キャンセル、出力ファイルの扱いは「<strong>書き出し（Exp WebM）とファイルについて</strong>」を参照してください。
                     </li>
                 </ol>
             </section>
@@ -98,10 +98,10 @@
                 <h4 id="manual-transport-heading">トランスポート（再生・シーク・各オプション）</h4>
                 <ul>
                     <li>
-                        トランスポート最下行の <strong>Export</strong> 欄では、プルダウンで書き出しモード（<strong>Compare PiP</strong> / <strong>Older only</strong> / <strong>Newer only</strong>）を選び、<strong>With TC</strong> で Compare 時のみタイムコードの左下焼き込みのオン・オフを切り替えます（Older / Newer のみでは<strong>焼き込み必須</strong>のため、オフにすると説明オーバレイが出てチェックはすぐオンに戻ります。閉じ方は <strong>OK</strong>・外側クリック・<kbd>Esc</kbd>）。<strong>Exp WebM</strong> を押すと、<strong>Audio</strong> 行で選んだモードに応じた音声をミックスした WebM を録画します（<strong>Mute</strong> 選択時や Web Audio が使えない場合は<strong>映像のみ</strong>）。<strong>Both</strong> ミックスで書き出すときは左右のデコードが必要なため、片側エクスポートでも<strong>両方のファイルが読み込まれている</strong>必要があります。<strong>Compare</strong> 書き出しは<strong>左右そろっている</strong>必要があります。書き出し中は画面中央にオーバレイが出て<strong>操作がロック</strong>され、<kbd>Esc</kbd> でキャンセルできる旨と進捗が表示されます。尺ぶんリアルタイムで進みます。出力形式の注意や MP4 / MJPEG への変換は「<strong>書き出し（Exp WebM）とファイルについて</strong>」を参照してください。<strong>Chrome 系</strong>の利用を推奨します。
+                        トランスポート <strong>1 段目</strong>の <strong>Export</strong> 欄では、プルダウンで書き出しモード（<strong>Compare PiP</strong> / <strong>Older only</strong> / <strong>Newer only</strong>）を選び、<strong>With TC</strong> で Compare 時のみタイムコードの左下焼き込みのオン・オフを切り替えます（Older / Newer のみでは<strong>焼き込み必須</strong>のため、オフにすると説明オーバレイが出てチェックはすぐオンに戻ります。閉じ方は <strong>OK</strong>・外側クリック・<kbd>Esc</kbd>）。<strong>Exp WebM</strong> を押すと、<strong>Audio</strong> 行で選んだモードに応じた音声をミックスした WebM を録画します（<strong>Mute</strong> 選択時や Web Audio が使えない場合は<strong>映像のみ</strong>）。<strong>Both</strong> ミックスで書き出すときは左右のデコードが必要なため、片側エクスポートでも<strong>両方のファイルが読み込まれている</strong>必要があります。<strong>Compare</strong> 書き出しは<strong>左右そろっている</strong>必要があります。書き出し中は画面中央にオーバレイが出て<strong>操作がロック</strong>され、<kbd>Esc</kbd> でキャンセルできる旨と進捗が表示されます。尺ぶんリアルタイムで進みます。出力形式の注意や MP4 / MJPEG への変換は「<strong>書き出し（Exp WebM）とファイルについて</strong>」を参照してください。<strong>Chrome 系</strong>の利用を推奨します。
                     </li>
                     <li>
-                        映像の下にある<strong>トランスポート枠</strong>は、画面上から<strong>現在 / 総尺のタイムコード</strong> → <strong>シークバー</strong>と <strong>Play / Pause</strong> → <strong>Playback Drift</strong> →（１行下のオプション条）<strong>Video</strong> → <strong>Loop</strong> / <strong>Auto Play</strong> → <strong>Audio</strong> → <strong>Export</strong> の順で並んでいます。オプション条の詳細は、このあとの見出しどおりです。
+                        映像の下にある<strong>トランスポート枠</strong>は、画面上から<strong>現在 / 総尺のタイムコード</strong> → <strong>シークバー</strong>と <strong>Play / Pause</strong> → <strong>Playback Drift</strong> →（オプション条・<strong>2 段</strong>）<strong>1 段目</strong>：<strong>Video</strong> → <strong>Audio</strong> → <strong>Export</strong>。<strong>2 段目</strong>（中央寄せ）：<strong>Speed</strong> → <strong>Loop</strong> / <strong>Auto Play</strong> の順です。オプション条の詳細は、このあとの見出しどおりです。
                     </li>
                     <li>
                         シークバーの<strong>最大値（総尺）</strong>は、左右のうち<strong>長い方</strong>の尺に合わせます。表示中の<strong>現在位置</strong>は、両方の再生位置の<strong>遅い方（大きい方）</strong>に合わせて更新されます。
@@ -174,6 +174,24 @@
                     </li>
                 </ul>
             </section>
+
+            <section class="app-manual-category" aria-labelledby="manual-speed-heading">
+                <h4 id="manual-speed-heading">再生速度（Speed）</h4>
+                <ul>
+                    <li>
+                        トランスポート<strong>2 段目</strong>の <strong>Speed</strong> 欄で、左右の再生速度を<strong>リアルタイム</strong>に変えられます。中央には現在の倍率（例：<strong>1x</strong>、<strong>0.5x</strong>、<strong>2x</strong>）が表示されます。
+                    </li>
+                    <li>
+                        <strong>−</strong> / <strong>＋</strong> ボタン、またはキーボード（下記「キーボードショートカット」）で<strong>一段階ずつ</strong>変更します。通常は <strong>0.25x</strong> 刻みで、<strong>0.25x</strong> より遅い側の先頭だけ <strong>0.1x</strong> です。範囲は <strong>0.1x</strong>（最大 10 倍スロー）～ <strong>2x</strong>（2 倍速）で、既定は <strong>1x</strong> です。
+                    </li>
+                    <li>
+                        <strong>保存されません</strong>。ページの<strong>再読み込み</strong>のたびに <strong>1x</strong> に戻ります。
+                    </li>
+                    <li>
+                        <strong>Exp WebM</strong> の書き出しは速度設定を反映せず、常に <strong>1.0×</strong> で録画します。書き出しを開始した時点で <strong>Speed</strong> 表示も <strong>1x</strong> に戻ります（書き出し後も <strong>1x</strong> のままです）。
+                    </li>
+                </ul>
+            </section>
             <section class="app-manual-category" aria-labelledby="manual-autoplay-heading">
                 <h4 id="manual-autoplay-heading">自動再生（Auto Play）</h4>
                 <ul>
@@ -212,6 +230,9 @@
                 <h4 id="manual-export-file-heading">書き出し（Exp WebM）とファイルについて</h4>
                 <ul>
                     <li>
+                        書き出し中の再生は常に <strong>1.0×</strong> です（プレビューで <strong>Speed</strong> を変えていても、出力ファイルのタイムラインは通常速度相当になります）。<strong>Exp WebM</strong> を押した時点で <strong>Speed</strong> 表示は <strong>1x</strong> に戻ります。
+                    </li>
+                    <li>
                         本アプリの <strong>Exp WebM</strong> は、ブラウザの録画機能と Web Audio で得た音声（<strong>Mute</strong> 時は映像のみ）を組み合わせて、<strong>WebM</strong>（主に VP8 / VP9 系＋必要に応じて Opus）をその場で生成しダウンロードします。編集・納品の現場では <strong>MP4</strong>（H.264 等）や <strong>MJPEG</strong> など別形式に慣れている方も多く、WebM 単体では馴染みが薄い形式かもしれません。
                     </li>
                     <li>
@@ -226,7 +247,7 @@
                 <h4 id="manual-hint-heading">シーク・操作の画面上ヒント</h4>
                 <ul>
                     <li>
-                        矢印キーやテンキーのジャンプ、レイアウト / 音声 / ループの変更などのあと、<strong>画面上部に短いテキストのフラッシュ</strong>が出ることがあります。<strong>ログ</strong>とあわせて、直近の操作内容の確認に使えます。
+                        矢印キーやテンキーのジャンプ、レイアウト / 音声 / ループ / <strong>Speed</strong> の変更などのあと、<strong>画面上部に短いテキストのフラッシュ</strong>が出ることがあります。<strong>ログ</strong>とあわせて、直近の操作内容の確認に使えます。
                     </li>
                 </ul>
             </section>
@@ -234,7 +255,7 @@
                 <h4 id="manual-keys-heading">キーボードショートカット</h4>
                 <ul>
                     <li>
-                        再生・シーク・音声・レイアウト・ループなどにショートカットがあります。内容はページ中段の<strong>ショートカット一覧</strong>どおりです。
+                        再生・シーク・<strong>Speed</strong>・音声・レイアウト・ループなどにショートカットがあります。内容はページ中段の<strong>ショートカット一覧</strong>どおりです。<strong>Speed</strong> はテンキー <strong>−</strong> / <strong>＋</strong> / <strong>*</strong>（リセット）、テンキーが無い場合は <strong>,</strong> / <strong>.</strong> / <strong>/</strong> です。
                     </li>
                     <li>
                         <strong>無効になるフォーカス</strong>：<code>textarea</code>、<code>select</code>（<strong>Video</strong> のプルダウン含む）、<code>input</code> のうち<strong>シークバー以外</strong>、ならびに contenteditable 要素にフォーカスがある間は、ショートカットは処理されません。シークバーにフォーカスがある場合は、主要なショートカットキーを押すと<strong>フォーカスが外れてから</strong>処理されます。
@@ -253,7 +274,7 @@
     </details>
 
     <details class="app-doc-fold">
-        <summary class="app-doc-fold__summary" id="app-manual-source-heading">ソースコードを改変する場合</summary>
+        <summary class="app-doc-fold__summary" id="app-manual-source-heading">改変・再利用</summary>
         <div class="app-doc-fold__body app-manual">
             <ul>
                 <li>このページの <strong>HTML・CSS・JavaScript</strong> は、目的を問わず<strong>自由に改変・複製・再利用</strong>して構いません（商用・社内ツールを含みます）。連絡も不要です。</li>

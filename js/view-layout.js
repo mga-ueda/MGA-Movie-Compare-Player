@@ -84,7 +84,7 @@
         schedulePersistSession();
         writeLog('Loop playback: ' + (on ? 'ON' : 'OFF'));
         flashSeekHint('Loop', on ? 'ON' : 'OFF', 'notice');
-        flashTransportOptBox('loop');
+        flashTransportOptBox('playback');
     }
 
     function getAutoPlayEnabled() {
@@ -101,6 +101,6 @@
         writePrefs();
         writeLog('Auto play: ' + (on ? 'ON' : 'OFF'));
         flashSeekHint('Auto Play', on ? 'ON' : 'OFF', 'notice');
-        flashTransportOptBox('loop');
+        flashTransportOptBox('playback');
     }
 

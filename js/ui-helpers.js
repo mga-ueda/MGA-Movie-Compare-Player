@@ -1,12 +1,16 @@
     // === 1. UI 補助（トランスポート枠の glow・マニュアル accordion）
-    const transportOptGlowClearTimers = { view: 0, loop: 0, audio: 0 };
+    const transportOptGlowClearTimers = { view: 0, speed: 0, playback: 0, audio: 0 };
     function flashTransportOptBox(which) {
         const sel =
             which === 'view'
                 ? '.transport-opt-box--view'
-                : which === 'loop'
-                  ? '.transport-opt-box--loop'
-                  : '.transport-opt-box--audio';
+                : which === 'speed'
+                  ? '.transport-opt-box--speed'
+                  : which === 'playback'
+                    ? '.transport-opt-box--playback'
+                    : which === 'loop'
+                      ? '.transport-opt-box--playback'
+                      : '.transport-opt-box--audio';
         const box = document.querySelector(sel);
         if (!box) return;
         box.classList.remove('transport-opt-box--glow');

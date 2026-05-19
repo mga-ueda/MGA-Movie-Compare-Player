@@ -8,6 +8,7 @@
      * 改造ポイント（挙動を変えやすい順の目安）:
      *   - ブラウザ内保存: LS_PREFS_KEY + writePrefs/readPrefs（localStorage） / IDB_NAME, IDB_VER, IDB_STORE, IDB_KEY_LAST + persistSessionToStorage（IndexedDB）
      *   - 映像レイアウト: VIEW_MODE_VALUES, applyViewMode, compare-stage 周辺の HTML/CSS
+     *   - 再生速度: playbackSpeedDown/Up/Display, playback-speed.js, applyPlaybackSpeedToVideos
      *   - ループ / 自動再生: loopPlaybackCheckbox, autoPlayCheckbox, onVideoEnded, requestAutoPlay
      *   - シーク・同期: DISPLAY_FPS, DRIFT_* 定数, maybeAutoSyncDriftOneFrame, masterDuration
      *   - 音声: getAudioMode, buildAudioGraph(mode, outputNode), restorePlaybackAudioRouting, ensureWebAudioRouting, input[name="audioMode"]（split-mono / old-stereo / new-stereo / mute）
@@ -29,6 +30,9 @@
     const playStopBtn = document.getElementById('playStopBtn');
     const loopPlaybackCheckbox = document.getElementById('loopPlaybackCheckbox');
     const autoPlayCheckbox = document.getElementById('autoPlayCheckbox');
+    const playbackSpeedDown = document.getElementById('playbackSpeedDown');
+    const playbackSpeedUp = document.getElementById('playbackSpeedUp');
+    const playbackSpeedDisplay = document.getElementById('playbackSpeedDisplay');
     const currentTimeEl = document.getElementById('currentTime');
     const totalTimeEl = document.getElementById('totalTime');
     const driftRow = document.getElementById('driftRow');

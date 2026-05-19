@@ -160,6 +160,17 @@
         });
     }
 
+    if (playbackSpeedDown) {
+        playbackSpeedDown.addEventListener('click', () => {
+            bumpPlaybackSpeedStep(-1, 'button');
+        });
+    }
+    if (playbackSpeedUp) {
+        playbackSpeedUp.addEventListener('click', () => {
+            bumpPlaybackSpeedStep(1, 'button');
+        });
+    }
+
     if (exportPipBtn) {
         exportPipBtn.addEventListener('click', () => {
             void runSilentWebmExport();
@@ -260,6 +271,7 @@
                 if (!(await waitUntilTransportPlaying())) {
                     throw new Error('videos remain paused after play()');
                 }
+                applyPlaybackSpeedToVideos();
                 setPlayingUi(true);
                 if (!rafId) rafId = requestAnimationFrame(tick);
                 return true;
@@ -384,7 +396,13 @@
                 e.code === 'KeyN' ||
                 e.code === 'KeyM' ||
                 e.code === 'KeyV' ||
-                e.code === 'KeyL';
+                e.code === 'KeyL' ||
+                e.code === 'NumpadAdd' ||
+                e.code === 'NumpadSubtract' ||
+                e.code === 'NumpadMultiply' ||
+                e.code === 'Comma' ||
+                e.code === 'Period' ||
+                e.code === 'Slash';
             if (appKey) seekBar.blur();
         }
 
@@ -456,6 +474,38 @@
             e.preventDefault();
             autoPlayCheckbox.checked = !autoPlayCheckbox.checked;
             logAndPersistAutoPlay();
+            return;
+        }
+
+        const playbackSpeedDeltaByKey = {
+            NumpadAdd: 1,
+            NumpadSubtract: -1,
+            Period: 1,
+            Comma: -1,
+        };
+        if (
+            !e.repeat &&
+            !e.ctrlKey &&
+            !e.altKey &&
+            !e.metaKey &&
+            !e.shiftKey &&
+            Object.prototype.hasOwnProperty.call(playbackSpeedDeltaByKey, e.code)
+        ) {
+            e.preventDefault();
+            bumpPlaybackSpeedStep(playbackSpeedDeltaByKey[e.code], e.code);
+            return;
+        }
+
+        if (
+            !e.repeat &&
+            !e.ctrlKey &&
+            !e.altKey &&
+            !e.metaKey &&
+            !e.shiftKey &&
+            (e.code === 'NumpadMultiply' || e.code === 'Slash')
+        ) {
+            e.preventDefault();
+            resetPlaybackSpeedStep(e.code);
             return;
         }
 
