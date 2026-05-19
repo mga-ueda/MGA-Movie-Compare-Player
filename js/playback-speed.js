@@ -1,4 +1,4 @@
-    // === 2b. 再生速度（0.1x ～ 2x、0.25x 刻み。保存せずリロード時は常に 1.0x）
+    // 再生速度（0.1x～2x。保存せずリロード時は 1.0x）
     const PLAYBACK_SPEED_RATES = (function buildPlaybackSpeedRates() {
         const out = [0.1];
         for (let q = 1; q <= 8; q++) {

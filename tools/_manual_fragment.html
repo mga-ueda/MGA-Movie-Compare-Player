@@ -8,7 +8,7 @@
                 <li>本アプリは静的ファイル（<code>index.html</code>・<code>css/</code>・<code>js/</code> など）で構成されています。<strong>ビルドやサーバーは不要</strong>です。フォルダごと保存し、ルートの <code>index.html</code> をブラウザで開いてください（<code>file://</code> で動作します。favicon 等の外部 CDN 参照は環境により取得できない場合があります）。</li>
                 <li>動画は<strong>このブラウザ内でのみ</strong>デコード・再生され、サーバーへ<strong>アップロードされません</strong>。<strong>Google Chrome</strong> の利用を推奨します。ブラウザや形式によってはデコードできないことがあります。</li>
                 <li>ディスク上の元ファイルを書き出し直した場合でも、本アプリは<strong>自動では再読み込みしません</strong>。更新した動画を反映するには、<strong>ドロップゾーン</strong>または<strong>映像エリア</strong>へ再度ドロップしてください。前回セッションの復元はブラウザ内の保存データ（<code>IndexedDB</code>）に保存されたコピーを参照します（元ファイルのパスは保持しません）。ブラウザのストレージ整理により保存データが消えると、セッションは復元できません。</li>
-                <li>映像レイアウト・ループ・<strong>Auto Play</strong>・音声・<strong>Export</strong> 欄などの UI 設定は、次回開いたときにブラウザ内（<code>localStorage</code> 等）から復元されます。<strong>再生速度（Speed）</strong>は保存されず、ページの<strong>再読み込み</strong>時は常に <strong>1x</strong> です。<strong>シークバー位置は保存されず</strong>、再読み込み時は常に先頭です。読み込んだ動画データのコピーもブラウザ内（<code>IndexedDB</code> 等）に保存されます。</li>
+                <li><strong>Video</strong> / <strong>Audio</strong> / <strong>Export</strong> / <strong>Loop</strong> / <strong>Auto Play</strong> などの UI 設定は、次回開いたときにブラウザ内（<code>localStorage</code> 等）から復元されます。<strong>Speed</strong> は保存されず、ページの<strong>再読み込み</strong>時は常に <strong>1x</strong> です。シークバー位置は保存されず、再読み込み時は常に先頭です。読み込んだ動画データのコピーもブラウザ内（<code>IndexedDB</code> 等）に保存されます。</li>
                 <li>書き出しファイルはブラウザ標準の <strong>WebM</strong> です。MP4 / MJPEG 等への変換や色の扱いは「使い方」の「<strong>書き出し（Exp WebM）とファイルについて</strong>」を参照してください。</li>
             </ul>
         </div>
@@ -24,10 +24,10 @@
                         画面上部の<strong>ドロップゾーン</strong>（または下の<strong>映像エリア</strong>）へ動画をドロップするか、ゾーンを<strong>クリックしてファイルを選択</strong>します（詳細は「<strong>ドロップゾーン（動画の読み込み）</strong>」）。
                     </li>
                     <li>
-                        トランスポートの <strong>1 段目</strong>で <strong>Video</strong>（<strong>Side by Side</strong> / <strong>Difference</strong> / <strong>Overlay</strong>）、<strong>Audio</strong>（<strong>Both</strong> / <strong>Older Only</strong> / <strong>Newer Only</strong> / <strong>Mute</strong>）、<strong>Export</strong> を選びます。<strong>2 段目</strong>で <strong>Speed</strong>（再生倍率）と <strong>Loop</strong>・<strong>Auto Play</strong> を調整します（詳細は各見出しを参照）。
+                        <strong>Play</strong> / <strong>Pause</strong> とシークバー、またはキーボード（ページ中段の<strong>キーボードショートカット</strong>）で再生位置を調整します（<strong>Play/Stop</strong> は [<kbd>Space</kbd>]）。動画の同期ズレは <strong>Playback Drift</strong> 行で確認できます（<strong>Auto Play</strong> が ON のときは、左右がそろうと自動的に再生が始まることもあります）。
                     </li>
                     <li>
-                        <strong>Play / Pause</strong> とシークバー、またはキーボード（ページ中段の<strong>ショートカット一覧</strong>）で再生位置を調整します。動画の同期ズレは <strong>Playback Drift</strong> 行で確認できます。
+                        トランスポートの <strong>1 段目</strong>で <strong>Video</strong>（<strong>Side by Side</strong> / <strong>Difference</strong> / <strong>Overlay</strong>）、<strong>Audio</strong>（<strong>Both</strong> / <strong>Older Only</strong> / <strong>Newer Only</strong> / <strong>Mute</strong>）、<strong>Export</strong> を選びます。<strong>2 段目</strong>で <strong>Speed</strong> と <strong>Loop</strong>・<strong>Auto Play</strong> を調整します（詳細は各見出しを参照）。
                     </li>
                     <li>
                         トランスポート <strong>1 段目</strong>の <strong>Export</strong> でモードと <strong>With TC</strong> を選び、<strong>Exp WebM</strong> でブラウザ内録画の WebM をダウンロードします。書き出し中のオーバレイや <kbd>Esc</kbd> キャンセル、出力ファイルの扱いは「<strong>書き出し（Exp WebM）とファイルについて</strong>」を参照してください。
@@ -73,7 +73,7 @@
                         すでに左右がそろったあと、ドロップゾーン等から別ファイルを<strong>１本だけ</strong>追加すると、<strong>左だけ差し替え</strong>され、右は未読み込みに戻ります。
                     </li>
                     <li>
-                        セッションの自動復元（ブラウザの再読み込み時に保存データから左右の動画を戻す）については「<strong>特記事項</strong>」を参照してください。リロード時は<strong>シーク位置を先頭</strong>に戻し、<strong>自動再生は行いません</strong>。
+                        セッションの自動復元（ブラウザの再読み込み時に保存データから左右の動画を戻す）については「<strong>特記事項</strong>」を参照してください。リロード時は再生位置を先頭に戻し、<strong>Auto Play</strong> による自動開始は行いません。
                     </li>
                 </ul>
             </section>
@@ -90,24 +90,21 @@
                         各パネル映像の隅の<strong>タイムコードオーバーレイ</strong>は、その側の FPS に合わせた <strong>HH:MM:SS:FF</strong> です。
                     </li>
                     <li>
-                        トランスポートの<strong>現在 / 総尺</strong>のタイムコード、キーボードの<strong>フレーム送り</strong>、および重ねビュー中央のタイムコードは、左右の表示 FPS の大きい方を整数化した<strong>マスター FPS</strong> に基づきます。
+                        トランスポートの<strong>現在 / 総尺</strong>のタイムコード、キーボードの <strong>Seek</strong>（1f など）、および重ねビュー中央のタイムコードは、左右の表示 FPS の大きい方を整数化した<strong>マスター FPS</strong> に基づきます。
                     </li>
                 </ul>
             </section>
             <section class="app-manual-category" aria-labelledby="manual-transport-heading">
-                <h4 id="manual-transport-heading">トランスポート（再生・シーク・各オプション）</h4>
+                <h4 id="manual-transport-heading">Playback / Seek（トランスポート）</h4>
                 <ul>
                     <li>
-                        トランスポート <strong>1 段目</strong>の <strong>Export</strong> 欄では、プルダウンで書き出しモード（<strong>Compare PiP</strong> / <strong>Older only</strong> / <strong>Newer only</strong>）を選び、<strong>With TC</strong> で Compare 時のみタイムコードの左下焼き込みのオン・オフを切り替えます（Older / Newer のみでは<strong>焼き込み必須</strong>のため、オフにすると説明オーバレイが出てチェックはすぐオンに戻ります。閉じ方は <strong>OK</strong>・外側クリック・<kbd>Esc</kbd>）。<strong>Exp WebM</strong> を押すと、<strong>Audio</strong> 行で選んだモードに応じた音声をミックスした WebM を録画します（<strong>Mute</strong> 選択時や Web Audio が使えない場合は<strong>映像のみ</strong>）。<strong>Both</strong> ミックスで書き出すときは左右のデコードが必要なため、片側エクスポートでも<strong>両方のファイルが読み込まれている</strong>必要があります。<strong>Compare</strong> 書き出しは<strong>左右そろっている</strong>必要があります。書き出し中は画面中央にオーバレイが出て<strong>操作がロック</strong>され、<kbd>Esc</kbd> でキャンセルできる旨と進捗が表示されます。尺ぶんリアルタイムで進みます。出力形式の注意や MP4 / MJPEG への変換は「<strong>書き出し（Exp WebM）とファイルについて</strong>」を参照してください。<strong>Chrome 系</strong>の利用を推奨します。
-                    </li>
-                    <li>
-                        映像の下にある<strong>トランスポート枠</strong>は、画面上から<strong>現在 / 総尺のタイムコード</strong> → <strong>シークバー</strong>と <strong>Play / Pause</strong> → <strong>Playback Drift</strong> →（オプション条・<strong>2 段</strong>）<strong>1 段目</strong>：<strong>Video</strong> → <strong>Audio</strong> → <strong>Export</strong>。<strong>2 段目</strong>（中央寄せ）：<strong>Speed</strong> → <strong>Loop</strong> / <strong>Auto Play</strong> の順です。オプション条の詳細は、このあとの見出しどおりです。
+                        映像の下にある<strong>トランスポート枠</strong>は、画面上から<strong>現在 / 総尺のタイムコード</strong> → <strong>シークバー</strong>と <strong>Play</strong> / <strong>Pause</strong> → <strong>Playback Drift</strong> →（オプション条・<strong>2 段</strong>）<strong>1 段目</strong>：<strong>Video</strong> → <strong>Audio</strong> → <strong>Export</strong>。<strong>2 段目</strong>（中央寄せ）：<strong>Speed</strong> → <strong>Loop</strong> / <strong>Auto Play</strong> の順です。各オプションの詳細は、このあとの見出しどおりです。
                     </li>
                     <li>
                         シークバーの<strong>最大値（総尺）</strong>は、左右のうち<strong>長い方</strong>の尺に合わせます。表示中の<strong>現在位置</strong>は、両方の再生位置の<strong>遅い方（大きい方）</strong>に合わせて更新されます。
                     </li>
                     <li>
-                        シークバーを<strong>ドラッグ</strong>している間は、その値に応じて<strong>両方の動画へ同時にシーク</strong>します。離したあと、再生中であれば更新ループが続きます。
+                        シークバーを<strong>ドラッグ</strong>している間は、その値に応じて<strong>両方の動画へ同時に移動</strong>します（画面上のヒントは <strong>Scrub</strong>）。離したあと、再生中であれば表示の更新が続きます。
                     </li>
                 </ul>
             </section>
@@ -115,7 +112,7 @@
                 <h4 id="manual-sync-heading">同期、Playback Drift、自動補正</h4>
                 <ul>
                     <li>
-                        <strong>同期の意味</strong>：シークや再生では、原則として<strong>両方の再生位置を同じ目標値に揃えます</strong>。デコードと描画はブラウザ任せのため、報告値がフレーム単位で<strong>常に一致するとは限りません</strong>。
+                        <strong>同期の意味</strong>：<strong>Seek</strong> や <strong>Playback</strong> では、原則として<strong>両方の再生位置を同じ目標値に揃えます</strong>。デコードと描画はブラウザ任せのため、報告値がフレーム単位で<strong>常に一致するとは限りません</strong>。
                     </li>
                     <li>
                         トランスポートの <strong>Playback Drift</strong> 行は、左右の再生位置の差を<strong>ミリ秒</strong>と<strong>マスター FPS 換算のフレーム数</strong>で示します。色分けは目安で、<strong>０に近いほど緑系</strong>、<strong>大きいほど赤系</strong>になります。いずれかが終端に達したときは <code>----</code> 表示になります。
@@ -127,15 +124,15 @@
                         補正が走ると、ログに <code>Sync auto-correct: …</code> が間欠的に残ります。
                     </li>
                     <li>
-                        <strong>Difference</strong> モードの見え方と同期の関係は、下の「<strong>映像レイアウト（Video）</strong>」の <strong>Difference</strong> を参照してください。<strong>Playback Drift</strong> の表示や自動補正は、重ね表示を読みやすく保つための目安・調整です。
+                        <strong>Difference</strong> モードの見え方と同期の関係は、下の「<strong>Video</strong>」の <strong>Difference</strong> を参照してください。<strong>Playback Drift</strong> の表示や自動補正は、重ね表示を読みやすく保つための目安・調整です。
                     </li>
                 </ul>
             </section>
             <section class="app-manual-category" aria-labelledby="manual-view-heading">
-                <h4 id="manual-view-heading">映像レイアウト（Video）</h4>
+                <h4 id="manual-view-heading">Video</h4>
                 <ul>
                     <li>
-                        トランスポート内の <strong>Video</strong> プルダウン、または <strong>[V]</strong> で、次の３モードだけをこの順に循環します。<strong>Side by Side</strong>（左右並び）→ <strong>Difference</strong>（差分重ね）→ <strong>Overlay</strong>（新しい側を上に、不透明度およそ 75% で重ねる）→ 先頭へ戻る、の繰り返しです。プルダウンの値と <strong>[V]</strong> は常に連動します。
+                        トランスポート <strong>1 段目</strong>の <strong>Video</strong> プルダウン、または <strong>[V]</strong> で、次の３モードだけをこの順に循環します。<strong>Side by Side</strong>（左右並び）→ <strong>Difference</strong>（差分重ね）→ <strong>Overlay</strong>（新しい側を上に、不透明度およそ 75% で重ねる）→ 先頭へ戻る、の繰り返しです。プルダウンの値と <strong>[V]</strong> は常に連動します。
                     </li>
                     <li>
                         <strong>Side by Side</strong>：左が<strong>古い</strong>動画、右が<strong>新しい</strong>動画の２パネル表示（<strong>既定</strong>）。ファイル名・補足行・隅のタイムコードの意味は、上の「<strong>パネル情報・タイムコード・FPS</strong>」と同じです。
@@ -147,7 +144,7 @@
                         <strong>Difference の見え方</strong>：２本の画素が一致している領域では差分がゼロとなり、画面は<strong>真っ黒</strong>に見えます。差異が無い区間では、黒い画面がそのまま続きます。左右で内容が違う箇所だけが、差分として<strong>色味の付いた表示</strong>で浮かび上がります。
                     </li>
                     <li>
-                        <strong>Difference と同期ズレ（Playback Drift）</strong>：この見え方は「同一時刻の同じフレーム同士」を重ねている前提に強く依存します。Playback Drift のフレーム表示が <strong>1 以上</strong> のとき、実際には差の無い静止画でも、前後のフレームが少しずれて重なることで差分が出て、<strong>差が無いように見えるべき場所まで色が付いて見える</strong>ことがあります。ズレを抑えたいときは、一度<strong>一時停止</strong>してから<strong>1 フレームだけシーク</strong>（キーボードの [←] / [→]）すると改善する場合があります。上の「同期、Playback Drift、自動補正」もあわせて参照してください。
+                        <strong>Difference と同期ズレ（Playback Drift）</strong>：この見え方は「同一時刻の同じフレーム同士」を重ねている前提に強く依存します。Playback Drift のフレーム表示が <strong>1 以上</strong> のとき、実際には差の無い静止画でも、前後のフレームが少しずれて重なることで差分が出て、<strong>差が無いように見えるべき場所まで色が付いて見える</strong>ことがあります。ズレを抑えたいときは、一度 <strong>Pause</strong> してから <strong>Seek</strong>（1f、[←] / [→]）すると改善する場合があります。上の「同期、Playback Drift、自動補正」もあわせて参照してください。
                     </li>
                     <li>
                         <strong>Difference</strong> では、<strong>圧縮ノイズ・解像度差・トリミングのズレ</strong>があると、実質同じ内容でも差が広がって見えることがあります（ブラウザの合成に依存します）。
@@ -156,61 +153,15 @@
                         <strong>Overlay（オーバーレイ）</strong>：同じく２本を１画面に重ねます。下が左（古い方）、上が右（新しい方）です。上層（新しい側）に <code>opacity: 0.75</code>（およそ 75% 不透明）を当て、通常合成で下の画に重ねます。２本を半透明に重ねて目視比較するモードで、Difference のように一致領域が黒一色になることはありません。左右パネルは隠れ、合成ビューだけが表示されます。
                     </li>
                     <li>
-                        <strong>Difference / Overlay</strong> の重ねモードでは、中央の<strong>タイムコードオーバーレイ</strong>はトランスポートと同じ<strong>マスター FPS</strong>（上記「パネル情報」）で、<strong>Side by Side</strong> 時より大きめの字体です。レイアウト切り替えは<strong>再生中でも可</strong>で、通常は再生が継続します。
-                    </li>
-                </ul>
-            </section>
-            <section class="app-manual-category" aria-labelledby="manual-loop-heading">
-                <h4 id="manual-loop-heading">ループ再生（Loop）</h4>
-                <ul>
-                    <li>
-                        <strong>Loop</strong> にチェックが入っているとき（<strong>既定</strong>）：長い方の尺の終端に達すると、<strong>両方の再生位置を先頭付近へ戻し、再生を継続</strong>します（ブラウザ標準のループ属性ではなく、アプリ側で両者を揃えて再開しています）。
-                    </li>
-                    <li>
-                        チェックを<strong>外した</strong>とき：終端で<strong>一時停止</strong>し、トランスポートが止まります。
-                    </li>
-                    <li>
-                        On / Off はトランスポートのチェックボックスか <strong>[L]</strong> です。
-                    </li>
-                </ul>
-            </section>
-
-            <section class="app-manual-category" aria-labelledby="manual-speed-heading">
-                <h4 id="manual-speed-heading">再生速度（Speed）</h4>
-                <ul>
-                    <li>
-                        トランスポート<strong>2 段目</strong>の <strong>Speed</strong> 欄で、左右の再生速度を<strong>リアルタイム</strong>に変えられます。中央には現在の倍率（例：<strong>1x</strong>、<strong>0.5x</strong>、<strong>2x</strong>）が表示されます。
-                    </li>
-                    <li>
-                        <strong>−</strong> / <strong>＋</strong> ボタン、またはキーボード（下記「キーボードショートカット」）で<strong>一段階ずつ</strong>変更します。通常は <strong>0.25x</strong> 刻みで、<strong>0.25x</strong> より遅い側の先頭だけ <strong>0.1x</strong> です。範囲は <strong>0.1x</strong>（最大 10 倍スロー）～ <strong>2x</strong>（2 倍速）で、既定は <strong>1x</strong> です。
-                    </li>
-                    <li>
-                        <strong>保存されません</strong>。ページの<strong>再読み込み</strong>のたびに <strong>1x</strong> に戻ります。
-                    </li>
-                    <li>
-                        <strong>Exp WebM</strong> の書き出しは速度設定を反映せず、常に <strong>1.0×</strong> で録画します。書き出しを開始した時点で <strong>Speed</strong> 表示も <strong>1x</strong> に戻ります（書き出し後も <strong>1x</strong> のままです）。
-                    </li>
-                </ul>
-            </section>
-            <section class="app-manual-category" aria-labelledby="manual-autoplay-heading">
-                <h4 id="manual-autoplay-heading">自動再生（Auto Play）</h4>
-                <ul>
-                    <li>
-                        <strong>Auto Play</strong> にチェックが入っているとき（<strong>既定</strong>）：ドロップまたはファイル選択で<strong>左右の動画がそろって再生可能になったタイミング</strong>で、自動的に再生を開始します（２本まとめて読み込んだとき、２本目を追加したときを含みます）。
-                    </li>
-                    <li>
-                        チェックを<strong>外した</strong>とき：左右がそろっても<strong>自動では再生せず</strong>、<strong>Play</strong> ボタンまたは <strong>[Space]</strong> で開始します。
-                    </li>
-                    <li>
-                        On / Off はトランスポートのチェックボックスか <strong>[A]</strong> です。設定は次回開いたときに復元されます。ブラウザの<strong>再読み込み</strong>やセッション復元時には<strong>自動再生しません</strong>（シーク位置は先頭のまま）。
+                        <strong>Difference / Overlay</strong> の重ねモードでは、中央の<strong>タイムコードオーバーレイ</strong>はトランスポートと同じ<strong>マスター FPS</strong>（上記「パネル情報」）で、<strong>Side by Side</strong> 時より大きめの字体です。<strong>Video</strong> の切り替えは<strong>再生中でも可</strong>で、通常は再生が継続します（画面上のヒントは <strong>Layout</strong>）。
                     </li>
                 </ul>
             </section>
             <section class="app-manual-category" aria-labelledby="manual-audio-heading">
-                <h4 id="manual-audio-heading">音声出力（Audio）</h4>
+                <h4 id="manual-audio-heading">Audio</h4>
                 <ul>
                     <li>
-                        トランスポートのラジオボタン、または <strong>[B]</strong> / <strong>[O]</strong> / <strong>[N]</strong> / <strong>[M]</strong> で切り替えます。ログや一時ヒントには内部的な説明が出ることがありますが、UI ラベルは <strong>Both</strong>、<strong>Older Only</strong>、<strong>Newer Only</strong>、<strong>Mute</strong> です。
+                        トランスポート <strong>1 段目</strong>のラジオボタン、または <strong>[B]</strong> / <strong>[O]</strong> / <strong>[N]</strong> / <strong>[M]</strong> で切り替えます。ログや一時ヒントには内部的な説明が出ることがありますが、UI ラベルは <strong>Both</strong>、<strong>Older Only</strong>、<strong>Newer Only</strong>、<strong>Mute</strong> です。
                     </li>
                     <li>
                         <strong>Both</strong>：各動画の L/R をモノラル化し、<strong>古い方を L・新しい方を R</strong> にパンして出力します。
@@ -226,11 +177,59 @@
                     </li>
                 </ul>
             </section>
+            <section class="app-manual-category" aria-labelledby="manual-speed-heading">
+                <h4 id="manual-speed-heading">Speed</h4>
+                <ul>
+                    <li>
+                        トランスポート<strong>2 段目</strong>の <strong>Speed</strong> 欄で、左右の再生速度を<strong>リアルタイム</strong>に変えられます。中央には現在の倍率（例：<strong>1x</strong>、<strong>0.5x</strong>、<strong>2x</strong>）が表示されます。
+                    </li>
+                    <li>
+                        <strong>−</strong> / <strong>＋</strong> ボタン、またはキーボードの <strong>Slower</strong> / <strong>Faster</strong> / <strong>Reset 1x</strong>（下記「キーボードショートカット」）で<strong>一段階ずつ</strong>変更します。通常は <strong>0.25x</strong> 刻みで、<strong>0.25x</strong> より遅い側の先頭だけ <strong>0.1x</strong> です。範囲は <strong>0.1x</strong>（最大 10 倍スロー）～ <strong>2x</strong>（2 倍速）で、既定は <strong>1x</strong> です。
+                    </li>
+                    <li>
+                        <strong>保存されません</strong>。ページの<strong>再読み込み</strong>のたびに <strong>1x</strong> に戻ります。
+                    </li>
+                    <li>
+                        <strong>Exp WebM</strong> への反映はありません（常に <strong>1.0×</strong> 録画）。詳細は「<strong>書き出し（Exp WebM）とファイルについて</strong>」を参照してください。
+                    </li>
+                </ul>
+            </section>
+            <section class="app-manual-category" aria-labelledby="manual-loop-heading">
+                <h4 id="manual-loop-heading">Loop</h4>
+                <ul>
+                    <li>
+                        <strong>Loop</strong> にチェックが入っているとき（<strong>既定</strong>）：長い方の尺の終端に達すると、<strong>両方の再生位置を先頭付近へ戻し、再生を継続</strong>します（ブラウザ標準のループ属性ではなく、アプリ側で両者を揃えて再開しています）。
+                    </li>
+                    <li>
+                        チェックを<strong>外した</strong>とき：終端で <strong>Pause</strong> し、トランスポートが止まります。
+                    </li>
+                    <li>
+                        On / Off はトランスポート <strong>2 段目</strong>のチェックボックスか <strong>Loop On/Off [L]</strong> です。
+                    </li>
+                </ul>
+            </section>
+            <section class="app-manual-category" aria-labelledby="manual-autoplay-heading">
+                <h4 id="manual-autoplay-heading">Auto Play</h4>
+                <ul>
+                    <li>
+                        <strong>Auto Play</strong> にチェックが入っているとき（<strong>既定</strong>）：ドロップまたはファイル選択で<strong>左右の動画がそろって再生可能になったタイミング</strong>で、自動的に再生を開始します（２本まとめて読み込んだとき、２本目を追加したときを含みます）。
+                    </li>
+                    <li>
+                        チェックを<strong>外した</strong>とき：左右がそろっても自動では再生せず、<strong>Play</strong> または <strong>Play/Stop [Space]</strong> で開始します。
+                    </li>
+                    <li>
+                        On / Off はトランスポート <strong>2 段目</strong>のチェックボックスか <strong>Auto Play On/Off [A]</strong> です。設定は次回開いたときに復元されます。ブラウザの<strong>再読み込み</strong>やセッション復元時には <strong>Auto Play</strong> による自動開始は行いません（再生位置は先頭のまま）。
+                    </li>
+                </ul>
+            </section>
             <section class="app-manual-category" aria-labelledby="manual-export-file-heading">
                 <h4 id="manual-export-file-heading">書き出し（Exp WebM）とファイルについて</h4>
                 <ul>
                     <li>
-                        書き出し中の再生は常に <strong>1.0×</strong> です（プレビューで <strong>Speed</strong> を変えていても、出力ファイルのタイムラインは通常速度相当になります）。<strong>Exp WebM</strong> を押した時点で <strong>Speed</strong> 表示は <strong>1x</strong> に戻ります。
+                        トランスポート <strong>1 段目</strong>の <strong>Export</strong> 欄で、プルダウンから書き出しモード（<strong>Compare (PiP)</strong> / <strong>Older only</strong> / <strong>Newer only</strong>）を選び、<strong>With TC</strong> で Compare 時のみタイムコードの左下焼き込みのオン・オフを切り替えます（Older / Newer のみでは<strong>焼き込み必須</strong>のため、オフにすると説明オーバレイが出てチェックはすぐオンに戻ります。閉じ方は <strong>OK</strong>・外側クリック・<kbd>Esc</kbd>）。<strong>Exp WebM</strong> を押すと、<strong>Audio</strong> 行で選んだモードに応じた音声をミックスした WebM を録画します（<strong>Mute</strong> 選択時や Web Audio が使えない場合は<strong>映像のみ</strong>）。<strong>Both</strong> ミックスで書き出すときは左右のデコードが必要なため、片側モードでも<strong>両方のファイルが読み込まれている</strong>必要があります。<strong>Compare (PiP)</strong> は<strong>左右そろっている</strong>必要があります。書き出し中は画面中央にオーバレイが出て<strong>操作がロック</strong>され、<kbd>Esc</kbd> でキャンセルできる旨と進捗が表示されます。尺ぶんリアルタイムで進みます。<strong>Chrome 系</strong>の利用を推奨します。
+                    </li>
+                    <li>
+                        書き出しは <strong>Speed</strong> 設定に関わらず常に <strong>1.0×</strong> で録画します。<strong>Exp WebM</strong> を押した時点で <strong>Speed</strong> 表示は <strong>1x</strong> に戻ります（書き出し後も <strong>1x</strong> のまま）。プレビュー再生も書き出し中は <strong>1.0×</strong> です。
                     </li>
                     <li>
                         本アプリの <strong>Exp WebM</strong> は、ブラウザの録画機能と Web Audio で得た音声（<strong>Mute</strong> 時は映像のみ）を組み合わせて、<strong>WebM</strong>（主に VP8 / VP9 系＋必要に応じて Opus）をその場で生成しダウンロードします。編集・納品の現場では <strong>MP4</strong>（H.264 等）や <strong>MJPEG</strong> など別形式に慣れている方も多く、WebM 単体では馴染みが薄い形式かもしれません。
@@ -244,10 +243,10 @@
                 </ul>
             </section>
             <section class="app-manual-category" aria-labelledby="manual-hint-heading">
-                <h4 id="manual-hint-heading">シーク・操作の画面上ヒント</h4>
+                <h4 id="manual-hint-heading">Seek / Jump などの画面上ヒント</h4>
                 <ul>
                     <li>
-                        矢印キーやテンキーのジャンプ、レイアウト / 音声 / ループ / <strong>Speed</strong> の変更などのあと、<strong>画面上部に短いテキストのフラッシュ</strong>が出ることがあります。<strong>ログ</strong>とあわせて、直近の操作内容の確認に使えます。
+                        <strong>Seek</strong>・<strong>Jump</strong>・<strong>Scrub</strong> のほか、<strong>Layout</strong> / <strong>Audio</strong> / <strong>Speed</strong> / <strong>Loop</strong> / <strong>Auto Play</strong> の変更のあと、<strong>画面上部に短いテキストのフラッシュ</strong>が出ることがあります（表示ラベルは UI と同じ英語表記）。<strong>ログ</strong>とあわせて、直近の操作内容の確認に使えます。
                     </li>
                 </ul>
             </section>
@@ -255,13 +254,13 @@
                 <h4 id="manual-keys-heading">キーボードショートカット</h4>
                 <ul>
                     <li>
-                        再生・シーク・<strong>Speed</strong>・音声・レイアウト・ループなどにショートカットがあります。内容はページ中段の<strong>ショートカット一覧</strong>どおりです。<strong>Speed</strong> はテンキー <strong>−</strong> / <strong>＋</strong> / <strong>*</strong>（リセット）、テンキーが無い場合は <strong>,</strong> / <strong>.</strong> / <strong>/</strong> です。
+                        <strong>Playback</strong> / <strong>Seek</strong> / <strong>Jump</strong> / <strong>Speed</strong> / <strong>Audio</strong> / <strong>Video</strong> / <strong>Loop</strong> / <strong>Auto Play</strong> などにショートカットがあります。内容はページ中段の<strong>キーボードショートカット</strong>（<strong>Playback</strong>・<strong>Speed</strong>・<strong>Seek</strong>・<strong>Jump</strong>・<strong>Audio</strong>・<strong>Video</strong> の各カテゴリ）どおりです。<strong>Speed</strong> は <strong>Slower</strong> / <strong>Faster</strong> / <strong>Reset 1x</strong>（テンキー <strong>−</strong> / <strong>＋</strong> / <strong>*</strong>、テンキー無しは <strong>,</strong> / <strong>.</strong> / <strong>/</strong>）です。
                     </li>
                     <li>
                         <strong>無効になるフォーカス</strong>：<code>textarea</code>、<code>select</code>（<strong>Video</strong> のプルダウン含む）、<code>input</code> のうち<strong>シークバー以外</strong>、ならびに contenteditable 要素にフォーカスがある間は、ショートカットは処理されません。シークバーにフォーカスがある場合は、主要なショートカットキーを押すと<strong>フォーカスが外れてから</strong>処理されます。
                     </li>
                     <li>
-                        <strong>矢印キー</strong>は連打リピート時もシークに使えます。その他の多くのキーはリピートを無視します。
+                        <strong>矢印キー</strong>は連打リピート時も <strong>Seek</strong> に使えます。その他の多くのキーはリピートを無視します。
                     </li>
                 </ul>
             </section>

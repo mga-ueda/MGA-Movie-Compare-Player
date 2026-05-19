@@ -1,20 +1,4 @@
-/*
-     * MGA Movie Compare Player — 複数ファイル構成（ビルド不要）。index.html 末尾の script 順で同一グローバルスコープに連結。
-     * バージョン表示: js/version.js（APP_VERSION / APP_CHANGELOG）→ js/apply-version.js
-     *
-     * 読み順: dom-refs.js（本ファイルの DOM 参照）→ ui-helpers.js → … → events-boot.js（index.html の script タグ順）。
-     * 各ファイル先頭の「// === …」区切りはブロック目印（エディタで === を検索）。
-     *
-     * 改造ポイント（挙動を変えやすい順の目安）:
-     *   - ブラウザ内保存: LS_PREFS_KEY + writePrefs/readPrefs（localStorage） / IDB_NAME, IDB_VER, IDB_STORE, IDB_KEY_LAST + persistSessionToStorage（IndexedDB）
-     *   - 映像レイアウト: VIEW_MODE_VALUES, applyViewMode, compare-stage 周辺の HTML/CSS
-     *   - 再生速度: playbackSpeedDown/Up/Display, playback-speed.js, applyPlaybackSpeedToVideos
-     *   - ループ / 自動再生: loopPlaybackCheckbox, autoPlayCheckbox, onVideoEnded, requestAutoPlay
-     *   - シーク・同期: DISPLAY_FPS, DRIFT_* 定数, maybeAutoSyncDriftOneFrame, masterDuration
-     *   - 音声: getAudioMode, buildAudioGraph(mode, outputNode), restorePlaybackAudioRouting, ensureWebAudioRouting, input[name="audioMode"]（split-mono / old-stereo / new-stereo / mute）
-     *   - WebM 書き出し: pipExportCanvas, captureStream, pickWebMRecorderMimeType(withAudio), MediaRecorder, runSilentWebmExport, pipExportActive, exportBlockingOverlay / exportBlockingSub, exportBlockingEscHint, soloTcNoticeOverlay, tryCancelSilentWebmExportFromEsc, currentExportRecorder, buildAudioGraph の MediaStreamDestination 切替
-     *   - 対応拡張子: #filePicker の accept と VIDEO_FILE_EXT / mimeTypeHintForVideoFileName
-     */
+// DOM 要素参照（index.html 末尾の script 順でグローバルに連結）
     const dropZone = document.getElementById('main-drop-zone');
     const filePicker = document.getElementById('filePicker');
     const videoLeft = document.getElementById('videoLeft');

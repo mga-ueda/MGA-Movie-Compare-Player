@@ -1,4 +1,4 @@
-    // === 6. 起動時プリファレンス適用（IDB リストアは末尾の boot）
+    // 起動時のプリファレンス適用
     (function initPrefsFromStorage() {
         try {
             const p = readPrefs();

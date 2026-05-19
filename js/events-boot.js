@@ -1,4 +1,4 @@
-    // === 12. メディアイベント・トランスポート UI・キーボード・起動（boot）
+    // イベント登録と起動処理
     function armAutoPlayGestureRetry() {
         if (autoPlayGestureRetryArmed || !getAutoPlayEnabled()) return;
         autoPlayGestureRetryArmed = true;

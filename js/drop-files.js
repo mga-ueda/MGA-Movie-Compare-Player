@@ -1,4 +1,4 @@
-    // === 11. ファイル割当・ドロップゾーン・ファイルピッカー
+    // ドロップゾーンとファイル割り当て
     function loadVideoToSide(side, f) {
         if (side === 'left') {
             if (urlLeft) URL.revokeObjectURL(urlLeft);

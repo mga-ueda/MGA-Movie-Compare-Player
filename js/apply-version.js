@@ -1,4 +1,4 @@
-    // === 0b. バージョン定数をページ UI へ反映（version.js の直後・dom-refs.js の直後）
+    // バージョン定数をページ UI に反映
     (function applyAppVersionToUi() {
         document.title = 'MGA Movie Compare Player · ' + APP_VERSION_LABEL;
 

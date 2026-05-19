@@ -1,4 +1,4 @@
-    // === 1. UI 補助（トランスポート枠の glow・マニュアル accordion）
+    // トランスポート枠のハイライトとマニュアル折りたたみ
     const transportOptGlowClearTimers = { view: 0, speed: 0, playback: 0, audio: 0 };
     function flashTransportOptBox(which) {
         const sel =

@@ -1,4 +1,4 @@
-    // === 5. IndexedDB セッション
+    // IndexedDB によるセッション保存
     function openIdb() {
         return new Promise((resolve, reject) => {
             if (!window.indexedDB) {

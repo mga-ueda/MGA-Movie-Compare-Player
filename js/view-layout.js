@@ -1,4 +1,4 @@
-    // === 2. 映像レイアウト（VIEW_MODE）とループ UI
+    // 映像レイアウト（VIEW_MODE）、ループ・自動再生
     const VIEW_MODE_VALUES = ['side-by-side', 'stack-diff', 'stack-cross'];
 
     function getViewMode() {

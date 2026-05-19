@@ -48,10 +48,6 @@ dom_text = dom_text.replace(
 )
 if dom_text.startswith("(function () {\n"):
     dom_text = dom_text[len("(function () {\n") :]
-dom_text = dom_text.replace(
-    "本スクリプト内の「// === 数字.」",
-    "js/ 内の「// === 数字.」",
-)
 dom_path.write_text(dom_text, encoding="utf-8")
 
 boot_path = ROOT / "js" / "events-boot.js"

@@ -1,4 +1,4 @@
-    // === 10. Web Audio（getAudioMode / buildAudioGraph / ensureWebAudioRouting）
+    // Web Audio ルーティング
     function getAudioMode() {
         const c = document.querySelector('input[name="audioMode"]:checked');
         return c && c.value ? c.value : 'split-mono';

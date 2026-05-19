@@ -1,4 +1,4 @@
-    // === 4. ログ・シークフラッシュ・localStorage prefs
+    // ログ、操作ヒント、localStorage プリファレンス
     const LOG_MAX_LINES = 500;
     function syncLogPanelHeightToShortcutGuide() {
         const guide = document.querySelector('.bottom-info .shortcut-guide');

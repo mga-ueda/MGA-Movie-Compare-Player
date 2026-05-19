@@ -1,4 +1,4 @@
-    // === 9. タイムコード・ドリフト・シーク・tick・割当ヘルパ（assignPair 等）
+    // タイムコード、シーク、同期、WebM 書き出し
     function updateDriftAndOverlays() {
         const dL = getDuration(videoLeft);
         const dR = getDuration(videoRight);

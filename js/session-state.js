@@ -1,4 +1,4 @@
-    // === 3. 再生セッション状態・保存用定数・Web Audio 準備
+    // 再生セッション状態と保存用定数
     let urlLeft = null;
     let urlRight = null;
     let fileLeft = null;
