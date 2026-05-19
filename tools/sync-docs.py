@@ -3,7 +3,7 @@
 Sync manual HTML fragment -> index.html + README.md.
 
 Single source of truth: tools/_manual_fragment.html
-  - Edit the fragment when changing 特記事項 / 使い方 / 改変・再利用.
+  - Edit the fragment when changing 特記事項 / 使い方 / 改変・再利用 / ライセンス.
   - Run: python tools/sync-docs.py
   - Changelog in README comes from js/version.js (same as the app UI).
 
