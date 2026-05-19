@@ -1,12 +1,16 @@
-
+<!--
+  マニュアル HTML の唯一の編集元（特記事項・使い方・バージョン枠・改変・再利用）。
+  更新後: py -3 tools/sync-docs.py
+  変更履歴の文言は js/version.js の APP_CHANGELOG を編集してください。
+-->
     <details class="app-doc-fold">
         <summary class="app-doc-fold__summary" id="app-manual-notice-heading">特記事項</summary>
         <div class="app-doc-fold__body app-manual">
             <ul>
                 <li>本ページは<strong>無償で提供される実験的なウェブアプリ</strong>です。不具合を常時監視しておらず、ご利用中に問題が生じても原則として把握いたしません。あらかじめご了承のうえご利用ください。</li>
+                <li>動画は<strong>このブラウザ内でのみ</strong>デコード・再生され、サーバーへは<strong>いかなる情報もアップロードされません</strong>。<strong>Google Chrome</strong> の利用を推奨します。ブラウザや形式によってはデコードできないことがあります。</li>
                 <li>このページの <strong>HTML・CSS・JavaScript</strong> は目的を問わず<strong>自由に改変・複製・再利用</strong>して構いません（商用・社内ツールを含みます）。連絡も不要です。独自版を公開・配布する場合、フッターのコピーライト表記とリンクは<strong>削除しても構いません</strong>（未改変の配布では残すことを推奨しますが、フォークや大幅なカスタマイズでは必須ではありません）。</li>
                 <li>本アプリは静的ファイル（<code>index.html</code>・<code>css/</code>・<code>js/</code> など）で構成されています。<strong>ビルドやサーバーは不要</strong>です。フォルダごと保存し、ルートの <code>index.html</code> をブラウザで開いてください（<code>file://</code> で動作します。favicon 等の外部 CDN 参照は環境により取得できない場合があります）。</li>
-                <li>動画は<strong>このブラウザ内でのみ</strong>デコード・再生され、サーバーへ<strong>アップロードされません</strong>。<strong>Google Chrome</strong> の利用を推奨します。ブラウザや形式によってはデコードできないことがあります。</li>
                 <li>ディスク上の元ファイルを書き出し直した場合でも、本アプリは<strong>自動では再読み込みしません</strong>。更新した動画を反映するには、<strong>ドロップゾーン</strong>または<strong>映像エリア</strong>へ再度ドロップしてください。前回セッションの復元はブラウザ内の保存データ（<code>IndexedDB</code>）に保存されたコピーを参照します（元ファイルのパスは保持しません）。ブラウザのストレージ整理により保存データが消えると、セッションは復元できません。</li>
                 <li><strong>Video</strong> / <strong>Audio</strong> / <strong>Export</strong> / <strong>Loop</strong> / <strong>Auto Play</strong> などの UI 設定は、次回開いたときにブラウザ内（<code>localStorage</code> 等）から復元されます。<strong>Speed</strong> は保存されず、ページの<strong>再読み込み</strong>時は常に <strong>1x</strong> です。シークバー位置は保存されず、再読み込み時は常に先頭です。読み込んだ動画データのコピーもブラウザ内（<code>IndexedDB</code> 等）に保存されます。</li>
                 <li>書き出しファイルはブラウザ標準の <strong>WebM</strong> です。MP4 / MJPEG 等への変換や色の扱いは「使い方」の「<strong>書き出し（Exp WebM）とファイルについて</strong>」を参照してください。</li>
@@ -61,7 +65,7 @@
                         ドロップゾーンを<strong>クリック</strong>するとファイル選択が開きます。ドロップゾーン・映像エリア・ページ上のその他の領域へ、いずれもドラッグ＆ドロップで読み込めます。
                     </li>
                     <li>
-                        動画を<strong>２本まとめて</strong>選ぶ／ドロップした場合（ドロップゾーンまたはファイル選択）：OS の<strong>最終更新日時</strong>が古いほうを<strong>左</strong>、新しいほうを<strong>右</strong>に並べます。同一時刻のときはファイル名順です。
+                        動画を<strong>２本まとめて</strong>選ぶ／ドロップした場合（ドロップゾーンまたはファイル選択）：<strong>最終更新日時</strong>が古いほうを<strong>左</strong>、新しいほうを<strong>右</strong>に並べます。同一時刻のときはファイル名順です。
                     </li>
                     <li>
                         ドロップゾーン等へ<strong>１本ずつ</strong>読み込む場合：空いている側（<strong>先に左、次に右</strong>）へ順に入ります。２本目を入れた時点で、更新日時に基づき左右が並べ替えられることがあります（上記「ドロップゾーン」の割り当てルール参照）。
@@ -260,7 +264,7 @@
                         <strong>Playback</strong> / <strong>Seek</strong> / <strong>Jump</strong> / <strong>Speed</strong> / <strong>Audio</strong> / <strong>Video</strong> / <strong>Loop</strong> / <strong>Auto Play</strong> などにショートカットがあります。内容はページ中段の<strong>キーボードショートカット</strong>（<strong>Playback</strong>・<strong>Speed</strong>・<strong>Seek</strong>・<strong>Jump</strong>・<strong>Audio</strong>・<strong>Video</strong> の各カテゴリ）どおりです。<strong>Speed</strong> は <strong>Slower</strong> / <strong>Faster</strong> / <strong>Reset 1x</strong>（テンキー <strong>−</strong> / <strong>＋</strong> / <strong>*</strong>、テンキー無しは <strong>,</strong> / <strong>.</strong> / <strong>/</strong>）です。
                     </li>
                     <li>
-                        <strong>無効になるフォーカス</strong>：<code>textarea</code>、<code>select</code>（<strong>Video</strong> のプルダウン含む）、<code>input</code> のうち<strong>シークバー以外</strong>、ならびに contenteditable 要素にフォーカスがある間は、ショートカットは処理されません。シークバーにフォーカスがある場合は、主要なショートカットキーを押すと<strong>フォーカスが外れてから</strong>処理されます。
+                        <strong>無効になるフォーカス</strong>：<code>textarea</code>、<code>select</code>（<strong>Video</strong> のプルダウン含む）、<code>input</code> のうち<strong>シークバー以外</strong>、ならびに編集可能要素にフォーカスがある間は、ショートカットは処理されません。シークバーにフォーカスがある場合は、主要なショートカットキーを押すと<strong>フォーカスが外れてから</strong>処理されます。
                     </li>
                     <li>
                         <strong>矢印キー</strong>は連打リピート時も <strong>Seek</strong> に使えます。その他の多くのキーはリピートを無視します。
