@@ -9,6 +9,12 @@
     const PLAYBACK_SPEED_INDEX_MIN = 0;
     const PLAYBACK_SPEED_INDEX_MAX = PLAYBACK_SPEED_RATES.length - 1;
     const PLAYBACK_SPEED_INDEX_DEFAULT = 4;
+    /** 1.0× 未満のスロー4段階で 1.0→0.5 まで均等に下げる（耳障り対策） */
+    const PLAYBACK_SPEED_SLOW_VOLUME_MIN = 0.5;
+    const PLAYBACK_SPEED_NORMAL_VOLUME = 1;
+    const PLAYBACK_SPEED_SLOW_VOLUME_STEP =
+        (PLAYBACK_SPEED_NORMAL_VOLUME - PLAYBACK_SPEED_SLOW_VOLUME_MIN) /
+        PLAYBACK_SPEED_INDEX_DEFAULT;
     let playbackSpeedIndex = PLAYBACK_SPEED_INDEX_DEFAULT;
 
     function playbackRateFromIndex(index) {
@@ -34,6 +40,17 @@
         );
     }
 
+    function volumeFromPlaybackSpeedIndex(index) {
+        if (index >= PLAYBACK_SPEED_INDEX_DEFAULT) {
+            return PLAYBACK_SPEED_NORMAL_VOLUME;
+        }
+        const slowSteps = PLAYBACK_SPEED_INDEX_DEFAULT - index;
+        return (
+            PLAYBACK_SPEED_NORMAL_VOLUME -
+            slowSteps * PLAYBACK_SPEED_SLOW_VOLUME_STEP
+        );
+    }
+
     function resetPlaybackSpeedToDefault() {
         playbackSpeedIndex = PLAYBACK_SPEED_INDEX_DEFAULT;
         updatePlaybackSpeedUi();
@@ -42,11 +59,13 @@
 
     function applyPlaybackSpeedToVideos() {
         const rate = playbackRateFromIndex(playbackSpeedIndex);
+        const vol = volumeFromPlaybackSpeedIndex(playbackSpeedIndex);
         [videoLeft, videoRight].forEach((v) => {
             if (!v) return;
             try {
                 v.defaultPlaybackRate = rate;
                 v.playbackRate = rate;
+                v.volume = vol;
             } catch (_) {}
         });
     }
