@@ -1,4 +1,56 @@
     // === 11. ファイル割当・ドロップゾーン・ファイルピッカー
+    function loadVideoToSide(side, f) {
+        if (side === 'left') {
+            if (urlLeft) URL.revokeObjectURL(urlLeft);
+            urlLeft = URL.createObjectURL(f);
+            fileLeft = f;
+            videoLeft.src = urlLeft;
+            nameLeft.textContent = f.name;
+            updatePanelInfoLine('left');
+            setLoaded(panelLeft, true);
+        } else {
+            if (urlRight) URL.revokeObjectURL(urlRight);
+            urlRight = URL.createObjectURL(f);
+            fileRight = f;
+            videoRight.src = urlRight;
+            nameRight.textContent = f.name;
+            updatePanelInfoLine('right');
+            setLoaded(panelRight, true);
+        }
+    }
+
+    /** 映像パネルへドロップしたとき：指定側へそのまま配置（更新日時による並べ替えなし） */
+    function assignFileToSide(side, files) {
+        const videos = pickVideoFiles(files);
+        if (videos.length === 0) {
+            writeLog('Panel drop (' + side + '): no playable video (ignored)');
+            return;
+        }
+        if (videos.length >= 2) {
+            const pair = pickOldestAndNewest(videos);
+            assignPairToVideos(pair[0], pair[1]);
+            writeLog('Panel drop (' + side + '): loaded pair: ' + pair[0].name + ' / ' + pair[1].name);
+            return;
+        }
+        const f = videos[0];
+        loadVideoToSide(side, f);
+        if (fileLeft && fileRight) {
+            autoPlayAfterUserLoad = true;
+            autoPlayLatch = false;
+        }
+        writeLog('Panel drop (' + side + '): ' + f.name);
+        schedulePersistSession();
+        void refreshContainerFpsForCurrentFiles();
+        applyViewMode(getViewMode());
+    }
+
+    function panelDropSideFromTarget(target) {
+        const panel = target && target.closest ? target.closest('.video-panel[data-side]') : null;
+        if (!panel) return null;
+        const side = panel.dataset.side;
+        return side === 'left' || side === 'right' ? side : null;
+    }
+
     /** 左が空なら左、右が空なら右、両方埋まっていれば左のみ差し替え（右は未読み込みに戻す） */
     function assignFiles(files) {
         const videos = pickVideoFiles(files);
@@ -134,6 +186,12 @@
         const names = Array.from(e.dataTransfer.files)
             .map((f) => f.name)
             .join(', ');
+        const panelSide = panelDropSideFromTarget(e.target);
+        if (panelSide) {
+            writeLog('Panel drop: ' + e.dataTransfer.files.length + ' item(s): ' + names);
+            assignFileToSide(panelSide, e.dataTransfer.files);
+            return;
+        }
         writeLog('Document drop: ' + e.dataTransfer.files.length + ' item(s): ' + names);
         assignFiles(e.dataTransfer.files);
     });
