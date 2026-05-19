@@ -29,6 +29,8 @@ README = ROOT / "README.md"
 MARKER_START = "<!-- @manual-doc:start -->"
 MARKER_END = "<!-- @manual-doc:end -->"
 
+GITHUB_PAGES_URL = "https://mga-ueda.github.io/MGA-Movie-Compare-Player/"
+
 MANUAL_BLOCK_RE = re.compile(
     r"\n\s*<details class=\"app-doc-fold\">"
     r"\s*\n\s*<summary[^>]*id=\"app-manual-notice-heading\".*?"
@@ -44,10 +46,13 @@ README_INTRO = """# MGA Movie Compare Player
 
 ブラウザ内だけで動画 2 本を比較再生・差分表示・WebM 書き出しができるウェブアプリです。
 
+**[▶ オンラインで使う（GitHub Pages）]({pages_url})**
+
 | | |
 |---|---|
+| **GitHub Pages** | [**{pages_url}**]({pages_url}) — ダウンロード不要ですぐに利用できます |
 | **バージョン** | {version_label} |
-| **起動** | リポジトリの `index.html` をブラウザで開く（ビルド不要・`file://` 可） |
+| **ローカル起動** | リポジトリの `index.html` をブラウザで開く（ビルド不要・`file://` 可） |
 | **推奨ブラウザ** | Google Chrome |
 | **リポジトリ** | [mga-ueda/MGA-Movie-Compare-Player](https://github.com/mga-ueda/MGA-Movie-Compare-Player) |
 
@@ -181,7 +186,7 @@ def fragment_to_markdown(fragment: str) -> str:
 
 def build_readme(fragment: str, version_label: str, changelog_md: str) -> str:
     return (
-        README_INTRO.format(version_label=version_label)
+        README_INTRO.format(version_label=version_label, pages_url=GITHUB_PAGES_URL)
         + fragment_to_markdown(fragment)
         + "\n"
         + changelog_md
