@@ -2,6 +2,7 @@
   マニュアル HTML の唯一の編集元（特記事項・使い方・バージョン枠・改変・再利用・ライセンス）。
   更新後: py -3 tools/sync-docs.py
   変更履歴の文言は js/version.js の APP_CHANGELOG を編集してください。
+  バージョン情報の表示はブラウザ起動時に apply-version.js が #appVersionChangelog へ挿入します（index.html ソース内には書き込みません。README の変更履歴だけ sync-docs が version.js から生成します）。
 -->
     <details class="app-doc-fold">
         <summary class="app-doc-fold__summary" id="app-manual-notice-heading">特記事項</summary>
@@ -189,6 +190,9 @@
                     </li>
                     <li>
                         <strong>−</strong> / <strong>＋</strong> ボタン、またはキーボードの <strong>Slower</strong> / <strong>Faster</strong> / <strong>Reset 1x</strong>（下記「キーボードショートカット」）で<strong>一段階ずつ</strong>変更します。通常は <strong>0.25x</strong> 刻みで、<strong>0.25x</strong> より遅い側の先頭だけ <strong>0.1x</strong> です。範囲は <strong>0.1x</strong>（最大 10 倍スロー）～ <strong>2x</strong>（2 倍速）で、既定は <strong>1x</strong> です。
+                    </li>
+                    <li>
+                        <strong>1.0× 未満</strong>のスロー再生では、速度 4 段階に連動して音量を下げます（<strong>0.75×</strong>→87.5%、<strong>0.5×</strong>→75%、<strong>0.25×</strong>→62.5%、<strong>0.1×</strong>→50%）。<strong>1.0× 以上</strong>は通常音量です（耳障り対策）。
                     </li>
                     <li>
                         <strong>保存されません</strong>。ページの<strong>再読み込み</strong>のたびに <strong>1x</strong> に戻ります。
