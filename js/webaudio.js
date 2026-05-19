@@ -4,7 +4,8 @@
         return c && c.value ? c.value : 'split-mono';
     }
 
-    function buildAudioGraph(mode, outputNode) {
+    function buildAudioGraph(mode, outputNode, opts) {
+        opts = opts || {};
         if (!audioCtx || !mediaSrcL || !mediaSrcR) return;
         mediaSrcL.disconnect();
         mediaSrcR.disconnect();
@@ -39,9 +40,9 @@
             const gRR = audioCtx.createGain();
             gRR.gain.value = 0.5;
             const panL = audioCtx.createStereoPanner();
-            panL.pan.value = -1;
+            panL.pan.value = opts.swapSplitMonoLR ? 1 : -1;
             const panR = audioCtx.createStereoPanner();
-            panR.pan.value = 1;
+            panR.pan.value = opts.swapSplitMonoLR ? -1 : 1;
             mediaSrcL.connect(sL);
             mediaSrcR.connect(sR);
             sL.connect(gLL, 0);

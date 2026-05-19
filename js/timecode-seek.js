@@ -473,7 +473,9 @@
                     await audioCtx.resume();
                 }
                 const exportDest = audioCtx.createMediaStreamDestination();
-                buildAudioGraph(exportAudioMode, exportDest);
+                const swapBothLR =
+                    mode === 'compare-pip' && exportAudioMode === 'split-mono';
+                buildAudioGraph(exportAudioMode, exportDest, { swapSplitMonoLR: swapBothLR });
                 if (exportAudioMode !== 'mute') {
                     const aTr = exportDest.stream.getAudioTracks()[0];
                     if (aTr) {

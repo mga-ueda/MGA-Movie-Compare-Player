@@ -418,7 +418,7 @@
                         トランスポート <strong>1 段目</strong>のラジオボタン、または <strong>[B]</strong> / <strong>[O]</strong> / <strong>[N]</strong> / <strong>[M]</strong> で切り替えます。ログや一時ヒントには内部的な説明が出ることがありますが、UI ラベルは <strong>Both</strong>、<strong>Older Only</strong>、<strong>Newer Only</strong>、<strong>Mute</strong> です。
                     </li>
                     <li>
-                        <strong>Both</strong>：各動画の L/R をモノラル化し、<strong>古い方を L・新しい方を R</strong> にパンして出力します。
+                        <strong>Both</strong>：各動画の L/R をモノラル化し、<strong>古い方を L・新しい方を R</strong> にパンして出力します（プレビュー再生時）。
                     </li>
                     <li>
                         <strong>Older Only</strong>：左（<strong>古い方</strong>）のステレオをそのまま L/R に出力します。
@@ -481,6 +481,9 @@
                 <ul>
                     <li>
                         トランスポート <strong>1 段目</strong>の <strong>Export</strong> 欄で、プルダウンから書き出しモード（<strong>Compare (PiP)</strong> / <strong>Older only</strong> / <strong>Newer only</strong>）を選び、<strong>With TC</strong> で Compare 時のみタイムコードの左下焼き込みのオン・オフを切り替えます（Older / Newer のみでは<strong>焼き込み必須</strong>のため、オフにすると説明オーバレイが出てチェックはすぐオンに戻ります。閉じ方は <strong>OK</strong>・外側クリック・<kbd>Esc</kbd>）。<strong>Exp WebM</strong> を押すと、<strong>Audio</strong> 行で選んだモードに応じた音声をミックスした WebM を録画します（<strong>Mute</strong> 選択時や Web Audio が使えない場合は<strong>映像のみ</strong>）。<strong>Both</strong> ミックスで書き出すときは左右のデコードが必要なため、片側モードでも<strong>両方のファイルが読み込まれている</strong>必要があります。<strong>Compare (PiP)</strong> は<strong>左右そろっている</strong>必要があります。書き出し中は画面中央にオーバレイが出て<strong>操作がロック</strong>され、<kbd>Esc</kbd> でキャンセルできる旨と進捗が表示されます。尺ぶんリアルタイムで進みます。<strong>Chrome 系</strong>の利用を推奨します。
+                    </li>
+                    <li>
+                        <strong>Compare (PiP)</strong> で <strong>Audio</strong> が <strong>Both</strong> のとき、書き出し音声だけ LR を入れ替えます（<strong>新しい方を L・古い方を R</strong>）。画面では新しい方が全面・古い方が右下 PiP 窓のため、右側に映る古い方の音声を R に合わせる意図です。プレビュー再生の <strong>Both</strong> は「Audio」の説明どおり <strong>古い方 L・新しい方 R</strong> のままです。
                     </li>
                     <li>
                         書き出しは <strong>Speed</strong> 設定に関わらず常に <strong>1.0×</strong> で録画します。<strong>Exp WebM</strong> を押した時点で <strong>Speed</strong> 表示は <strong>1x</strong> に戻ります（書き出し後も <strong>1x</strong> のまま）。プレビュー再生も書き出し中は <strong>1.0×</strong> です。
