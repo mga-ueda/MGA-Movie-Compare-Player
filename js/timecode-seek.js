@@ -571,10 +571,15 @@
             restorePlaybackAudioRouting();
             videoLeft.pause();
             videoRight.pause();
+            stopRaf();
+            setPlayingUi(false);
+            applyTimeToVideos(0);
+            seekBar.value = '0';
+            currentTimeEl.textContent = formatTimecodeForTransport(0);
+            updateDriftAndOverlays();
             pipExportActive = false;
             exportPipBtn.textContent = EXPORT_WEBM_BTN_LABEL;
             updateControlsEnabled();
-            updateSeekUiFromVideos();
             currentExportRecorder = null;
             pipExportEmergencyCleanup = null;
         }
