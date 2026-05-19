@@ -26,7 +26,7 @@
                 <h4 id="manual-flow-heading">はじめに（操作の流れ）</h4>
                 <ol>
                     <li>
-                        画面上部の<strong>ドロップゾーン</strong>（または下の<strong>映像エリア</strong>）へ動画をドロップするか、ゾーンを<strong>クリックしてファイルを選択</strong>します（詳細は「<strong>ドロップゾーン（動画の読み込み）</strong>」）。
+                        画面上部の<strong>ドロップゾーン</strong>（または下の<strong>映像エリア</strong>）へ動画をドロップするか、ゾーンを<strong>クリックしてファイルを選択</strong>します（詳細は「<strong>動画の読み込みと左右の割り当て</strong>」）。
                     </li>
                     <li>
                         <strong>Play</strong> / <strong>Pause</strong> とシークバー、またはキーボード（ページ中段の<strong>キーボードショートカット</strong>）で再生位置を調整します（<strong>Play/Stop</strong> は [<kbd>Space</kbd>]）。動画の同期ズレは <strong>Playback Drift</strong> 行で確認できます（<strong>Auto Play</strong> が ON のときは、左右がそろうと自動的に再生が始まることもあります）。
@@ -39,37 +39,17 @@
                     </li>
                 </ol>
             </section>
-            <section class="app-manual-category" aria-labelledby="manual-drop-heading">
-                <h4 id="manual-drop-heading">ドロップゾーン（動画の読み込み）</h4>
-                <ul>
-                    <li>
-                        画面上部の<strong>ドロップゾーン</strong>は、比較したい動画を読み込む入口です。<strong>ここへドロップ</strong>するか、<strong>クリックしてファイルを選択</strong>できます。下の<strong>映像エリア（左・右パネル）</strong>へドロップしても読み込めます。ページ上のその他の領域へドロップした場合も、動画として扱えるファイルだけが読み込み対象です。
-                    </li>
-                    <li>
-                        動画は<strong>このブラウザ内でのみ</strong>デコード・再生され、サーバーへは<strong>アップロードされません</strong>。
-                    </li>
-                    <li>
-                        対応形式は<strong>ブラウザが再生できる動画</strong>のみです。<strong>Google Chrome</strong> の利用を推奨します。
-                    </li>
-                    <li>
-                        <strong>左右の割り当て（ドロップゾーン・ファイル選択）</strong>：<strong>ファイルの最終更新日時</strong>で判定し、<strong>古い方を左・新しい方を右</strong>に並べます（同一時刻のときはファイル名順）。２本まとめて選ぶ／ドロップしたときに適用されます。
-                    </li>
-                    <li>
-                        <strong>左右の割り当て（映像エリアへ１本ずつ）</strong>：左パネルまたは右パネルへ<strong>１本ずつ</strong>ドロップした場合は、<strong>ドロップした側のまま</strong>配置します（更新日時による並べ替えはしません）。
-                    </li>
-                </ul>
-            </section>
             <section class="app-manual-category" aria-labelledby="manual-load-heading">
                 <h4 id="manual-load-heading">動画の読み込みと左右の割り当て</h4>
                 <ul>
                     <li>
-                        ドロップゾーンを<strong>クリック</strong>するとファイル選択が開きます。ドロップゾーン・映像エリア・ページ上のその他の領域へ、いずれもドラッグ＆ドロップで読み込めます。
+                        画面上部の<strong>ドロップゾーン</strong>は、比較したい動画を読み込む入口です。<strong>クリック</strong>するとファイル選択が開きます。<strong>ここへドロップ</strong>するほか、下の<strong>映像エリア（左・右パネル）</strong>やページ上のその他の領域へドラッグ＆ドロップしても読み込めます（動画として扱えるファイルのみが対象です）。動画のデコード・送信・対応形式・推奨ブラウザについては「<strong>特記事項</strong>」を参照してください。
                     </li>
                     <li>
-                        動画を<strong>２本まとめて</strong>選ぶ／ドロップした場合（ドロップゾーンまたはファイル選択）：<strong>最終更新日時</strong>が古いほうを<strong>左</strong>、新しいほうを<strong>右</strong>に並べます。同一時刻のときはファイル名順です。
+                        動画を<strong>２本まとめて</strong>選ぶ／ドロップした場合（ドロップゾーン・ファイル選択・ページ上のドロップ）：<strong>ファイルの最終更新日時</strong>が古いほうを<strong>左</strong>、新しいほうを<strong>右</strong>に並べます（同一時刻のときはファイル名順）。
                     </li>
                     <li>
-                        ドロップゾーン等へ<strong>１本ずつ</strong>読み込む場合：空いている側（<strong>先に左、次に右</strong>）へ順に入ります。２本目を入れた時点で、更新日時に基づき左右が並べ替えられることがあります（上記「ドロップゾーン」の割り当てルール参照）。
+                        ドロップゾーン等へ<strong>１本ずつ</strong>読み込む場合：空いている側（<strong>先に左、次に右</strong>）へ順に入ります。２本目を入れた時点で、上記の更新日時ルールに基づき左右が並べ替えられることがあります。
                     </li>
                     <li>
                         <strong>映像エリアの左・右パネル</strong>へ１本ずつドロップした場合：それぞれ<strong>ドロップしたパネル側</strong>に配置し、更新日時による並べ替えは<strong>行いません</strong>。
