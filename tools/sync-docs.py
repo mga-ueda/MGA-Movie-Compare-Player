@@ -51,11 +51,6 @@ README_INTRO = """# MGA Movie Compare Player
 | **推奨ブラウザ** | Google Chrome |
 | **リポジトリ** | [mga-ueda/MGA-Movie-Compare-Player](https://github.com/mga-ueda/MGA-Movie-Compare-Player) |
 
-> **マニュアルの編集方法**  
-> 以下の「特記事項」「使い方」「改変・再利用」は **`tools/_manual_fragment.html` から自動生成**されています。  
-> 文言を直すときは fragment を編集し、`python tools/sync-docs.py` を実行してください（`index.html` とこの README を同時に更新）。  
-> 変更履歴は **`js/version.js` の `APP_CHANGELOG`** が唯一のソースです。
-
 ---
 """
 
