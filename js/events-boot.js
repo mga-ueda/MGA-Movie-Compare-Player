@@ -90,6 +90,8 @@
     }
 
     function onMetaFor(side) {
+        inferContainerFpsForSide(side);
+        reconcileContainerSampleCountForSide(side);
         updatePanelInfoLine(side);
         syncSeekMax();
         updateControlsEnabled();
@@ -173,7 +175,11 @@
 
     if (exportPipBtn) {
         exportPipBtn.addEventListener('click', () => {
-            void runSilentWebmExport();
+            if (isSoloExportMode() && !hasExportBurnOverlay()) {
+                enforceSoloExportBurnCheckboxes();
+                return;
+            }
+            void runOfflineWebmExport();
         });
     }
 
@@ -185,12 +191,32 @@
     }
     if (exportBurnTcCheckbox) {
         exportBurnTcCheckbox.addEventListener('change', () => {
-            if (isSoloExportMode() && !exportBurnTcCheckbox.checked) {
-                exportBurnTcCheckbox.checked = true;
-                showSoloTcNoticeDialog();
+            if (isSoloExportMode() && !hasExportBurnOverlay()) {
+                enforceSoloExportBurnCheckboxes();
                 return;
             }
             writePrefs();
+            updateDriftAndOverlays();
+        });
+    }
+    if (exportBurnCurrentFramesCheckbox) {
+        exportBurnCurrentFramesCheckbox.addEventListener('change', () => {
+            if (isSoloExportMode() && !hasExportBurnOverlay()) {
+                enforceSoloExportBurnCheckboxes();
+                return;
+            }
+            writePrefs();
+            updateDriftAndOverlays();
+        });
+    }
+    if (exportBurnTotalFramesCheckbox) {
+        exportBurnTotalFramesCheckbox.addEventListener('change', () => {
+            if (isSoloExportMode() && !hasExportBurnOverlay()) {
+                enforceSoloExportBurnCheckboxes();
+                return;
+            }
+            writePrefs();
+            updateDriftAndOverlays();
         });
     }
     if (soloTcNoticeOverlay) {
@@ -656,6 +682,9 @@
     window.addEventListener('beforeunload', persistOnPageExit);
 
     (async function boot() {
+        if (typeof initPlayerBurnInOverlays === 'function') {
+            initPlayerBurnInOverlays();
+        }
         try {
             await restoreSessionFromStorage();
         } catch (e) {

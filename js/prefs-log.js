@@ -131,12 +131,36 @@
     }
 
     function getExportBurnTc() {
-        if (isSoloExportMode()) return true;
         return !!(exportBurnTcCheckbox && exportBurnTcCheckbox.checked);
+    }
+
+    function getExportBurnCurrentFrames() {
+        return !!(exportBurnCurrentFramesCheckbox && exportBurnCurrentFramesCheckbox.checked);
+    }
+
+    function getExportBurnTotalFrames() {
+        return !!(exportBurnTotalFramesCheckbox && exportBurnTotalFramesCheckbox.checked);
+    }
+
+    function hasExportBurnOverlay() {
+        return getExportBurnTc() || getExportBurnCurrentFrames() || getExportBurnTotalFrames();
+    }
+
+    function enforceSoloExportBurnCheckboxes() {
+        if (!isSoloExportMode()) return;
+        if (hasExportBurnOverlay()) return;
+        if (exportBurnTcCheckbox) exportBurnTcCheckbox.checked = true;
+        showSoloTcNoticeDialog();
     }
 
     function canExportWebm() {
         if (pipExportActive) return false;
+        if (
+            typeof isOfflineWebCodecsExportSupported === 'function' &&
+            !isOfflineWebCodecsExportSupported()
+        ) {
+            return false;
+        }
         const m = getExportMode();
         if (m === 'compare-pip') return bothReady();
         if (m === 'solo-old') return getDuration(videoLeft) > 0;
@@ -153,6 +177,13 @@
         if (exportBurnTcCheckbox && typeof p.exportBurnTc === 'boolean') {
             exportBurnTcCheckbox.checked = p.exportBurnTc;
         }
+        if (exportBurnCurrentFramesCheckbox && typeof p.exportBurnCurrentFrames === 'boolean') {
+            exportBurnCurrentFramesCheckbox.checked = p.exportBurnCurrentFrames;
+        }
+        if (exportBurnTotalFramesCheckbox && typeof p.exportBurnTotalFrames === 'boolean') {
+            exportBurnTotalFramesCheckbox.checked = p.exportBurnTotalFrames;
+        }
+        if (isSoloExportMode()) enforceSoloExportBurnCheckboxes();
     }
 
     function writePrefs() {
@@ -166,6 +197,8 @@
                     autoPlay: getAutoPlayEnabled(),
                     exportMode: getExportMode(),
                     exportBurnTc: getExportBurnTc(),
+                    exportBurnCurrentFrames: getExportBurnCurrentFrames(),
+                    exportBurnTotalFrames: getExportBurnTotalFrames(),
                 })
             );
         } catch (_) {}

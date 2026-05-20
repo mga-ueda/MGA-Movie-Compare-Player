@@ -37,6 +37,8 @@
     const exportPipBtn = document.getElementById('exportPipBtn');
     const exportModeSelect = document.getElementById('exportModeSelect');
     const exportBurnTcCheckbox = document.getElementById('exportBurnTcCheckbox');
+    const exportBurnCurrentFramesCheckbox = document.getElementById('exportBurnCurrentFramesCheckbox');
+    const exportBurnTotalFramesCheckbox = document.getElementById('exportBurnTotalFramesCheckbox');
     const exportBlockingOverlay = document.getElementById('exportBlockingOverlay');
     const exportBlockingSub = document.getElementById('exportBlockingSub');
     const soloTcNoticeOverlay = document.getElementById('soloTcNoticeOverlay');

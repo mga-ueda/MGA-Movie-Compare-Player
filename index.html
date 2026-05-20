@@ -47,11 +47,11 @@
         aria-labelledby="soloTcNoticeTitle"
     >
         <div class="export-blocking-overlay__panel">
-            <p class="export-blocking-overlay__title" id="soloTcNoticeTitle">With TC</p>
+            <p class="export-blocking-overlay__title" id="soloTcNoticeTitle">Burn-in</p>
             <p class="export-blocking-overlay__sub solo-tc-notice-body" id="soloTcNoticeBody">
-                Older only / Newer only のエクスポートでは、タイムコード（With TC）の焼き込みが必須です。
+                Older only / Newer only のエクスポートでは、<strong>Time Code</strong>・<strong>Current Frame</strong>・<strong>Total Frame</strong> の焼き込みが少なくとも一方必要です。
 
-                元動画のみをそのまま取得する用途は想定していないため、オフにしても意味がなく、チェックはすぐオンに戻ります。
+                元動画のみをそのまま取得する用途は想定していないため、両方オフにしてもチェックはすぐオンに戻ります。
             </p>
             <button type="button" class="solo-tc-notice-ok-btn" id="soloTcNoticeOk">OK</button>
         </div>
@@ -80,7 +80,7 @@
                 <p class="panel-info-line" id="infoLeft" hidden></p>
                 <div class="video-frame" id="frameLeft">
                     <video id="videoLeft" playsinline preload="metadata"></video>
-                    <div class="video-timecode video-timecode--idle" id="timecodeOverlayLeft" aria-hidden="true">00:00:00:00</div>
+                    <div class="video-timecode video-timecode--idle" id="timecodeOverlayLeft" aria-hidden="true"><span class="video-timecode__text">00:00:00:00</span></div>
                 </div>
             </div>
             <div class="video-panel" id="panelRight" data-side="right">
@@ -89,14 +89,14 @@
                 <p class="panel-info-line" id="infoRight" hidden></p>
                 <div class="video-frame" id="frameRight">
                     <video id="videoRight" playsinline preload="metadata"></video>
-                    <div class="video-timecode video-timecode--idle" id="timecodeOverlayRight" aria-hidden="true">00:00:00:00</div>
+                    <div class="video-timecode video-timecode--idle" id="timecodeOverlayRight" aria-hidden="true"><span class="video-timecode__text">00:00:00:00</span></div>
                 </div>
             </div>
         </div>
         <div class="compare-composite" id="compareComposite" hidden>
             <div class="video-panel video-panel--composite" id="panelComposite">
                 <div class="video-frame video-frame--stack" id="frameStack">
-                    <div class="video-timecode video-timecode--idle" id="timecodeOverlayStack" aria-hidden="true">00:00:00:00</div>
+                    <div class="video-timecode video-timecode--idle" id="timecodeOverlayStack" aria-hidden="true"><span class="video-timecode__text">00:00:00:00</span></div>
                 </div>
             </div>
         </div>
@@ -158,6 +158,30 @@
                         </div>
                     </div>
                 </div>
+                <div class="transport-opt-box transport-opt-box--speed">
+                    <div class="transport-opt-cell transport-opt-cell--speed" role="group" aria-labelledby="playbackSpeedLegend">
+                        <span id="playbackSpeedLegend" class="transport-compact-lbl">Speed</span>
+                        <div class="transport-speed-stepper">
+                            <button type="button" id="playbackSpeedDown" class="transport-speed-btn" aria-label="再生速度を一段階遅く" title="一段階遅く (テンキー − / ,)">−</button>
+                            <output id="playbackSpeedDisplay" class="transport-speed-display" aria-live="polite" aria-valuemin="0" aria-valuemax="8" aria-valuenow="4" aria-valuetext="1x">1x</output>
+                            <button type="button" id="playbackSpeedUp" class="transport-speed-btn" aria-label="再生速度を一段階速く" title="一段階速く (テンキー ＋ / .)">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="transport-options-strip transport-options-strip--secondary">
+                <div class="transport-opt-box transport-opt-box--playback">
+                    <div class="transport-opt-cell transport-opt-cell--playback">
+                        <label class="transport-compact-lbl transport-compact-lbl--row">
+                            <input type="checkbox" id="loopPlaybackCheckbox" checked>
+                            <span>Loop</span>
+                        </label>
+                        <label class="transport-compact-lbl transport-compact-lbl--row">
+                            <input type="checkbox" id="autoPlayCheckbox" checked>
+                            <span>Auto Play</span>
+                        </label>
+                    </div>
+                </div>
                 <div class="transport-opt-box transport-opt-box--export">
                     <div class="transport-opt-cell transport-opt-cell--export">
                         <span class="transport-compact-lbl" id="exportPipLegend">Export</span>
@@ -170,37 +194,21 @@
                             <option value="solo-old">Older only</option>
                             <option value="solo-new">Newer only</option>
                         </select>
-                        <label class="transport-compact-lbl transport-compact-lbl--row transport-compact-lbl--export-tc">
-                            <input type="checkbox" id="exportBurnTcCheckbox" />
-                            <span>With TC</span>
+                        <label class="transport-compact-lbl transport-compact-lbl--row transport-compact-lbl--export-burn">
+                            <input type="checkbox" id="exportBurnTcCheckbox" checked />
+                            <span>Time Code</span>
+                        </label>
+                        <label class="transport-compact-lbl transport-compact-lbl--row transport-compact-lbl--export-burn">
+                            <input type="checkbox" id="exportBurnCurrentFramesCheckbox" />
+                            <span>Current Frame</span>
+                        </label>
+                        <label class="transport-compact-lbl transport-compact-lbl--row transport-compact-lbl--export-burn">
+                            <input type="checkbox" id="exportBurnTotalFramesCheckbox" />
+                            <span>Total Frame</span>
                         </label>
                         <button type="button" id="exportPipBtn" class="export-pip-btn" disabled>
                             Exp WebM
                         </button>
-                    </div>
-                </div>
-            </div>
-            <div class="transport-options-strip transport-options-strip--secondary">
-                <div class="transport-opt-box transport-opt-box--speed">
-                    <div class="transport-opt-cell transport-opt-cell--speed" role="group" aria-labelledby="playbackSpeedLegend">
-                        <span id="playbackSpeedLegend" class="transport-compact-lbl">Speed</span>
-                        <div class="transport-speed-stepper">
-                            <button type="button" id="playbackSpeedDown" class="transport-speed-btn" aria-label="再生速度を一段階遅く" title="一段階遅く (テンキー − / ,)">−</button>
-                            <output id="playbackSpeedDisplay" class="transport-speed-display" aria-live="polite" aria-valuemin="0" aria-valuemax="8" aria-valuenow="4" aria-valuetext="1x">1x</output>
-                            <button type="button" id="playbackSpeedUp" class="transport-speed-btn" aria-label="再生速度を一段階速く" title="一段階速く (テンキー ＋ / .)">+</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="transport-opt-box transport-opt-box--playback">
-                    <div class="transport-opt-cell transport-opt-cell--playback">
-                        <label class="transport-compact-lbl transport-compact-lbl--row">
-                            <input type="checkbox" id="loopPlaybackCheckbox" checked>
-                            <span>Loop</span>
-                        </label>
-                        <label class="transport-compact-lbl transport-compact-lbl--row">
-                            <input type="checkbox" id="autoPlayCheckbox" checked>
-                            <span>Auto Play</span>
-                        </label>
                     </div>
                 </div>
             </div>
@@ -218,13 +226,6 @@
                     <span class="shortcut-sheet__chip">Loop On/Off [L]</span>
                     <span class="shortcut-sheet__chip">Auto Play On/Off [A]</span>
                 </div>
-
-                <div class="shortcut-sheet__cat">Speed</div>
-                <div class="shortcut-sheet__items">
-                    <span class="shortcut-sheet__chip">Slower [Numpad −] [,]</span>
-                    <span class="shortcut-sheet__chip">Faster [Numpad +] [.]</span>
-                    <span class="shortcut-sheet__chip">Reset 1x [Numpad *] [/]</span>
-                </div>
                 <div class="shortcut-sheet__cat">Seek</div>
                 <div class="shortcut-sheet__items">
                     <span class="shortcut-sheet__chip">1f [←] [→]</span>
@@ -236,6 +237,10 @@
                 <div class="shortcut-sheet__items">
                     <span class="shortcut-sheet__chip">0% [Numpad 0] ~ 90% [Numpad 9]</span>
                 </div>
+                <div class="shortcut-sheet__cat">Video</div>
+                <div class="shortcut-sheet__items">
+                    <span class="shortcut-sheet__chip">Cycles: Side by Side → Difference → Overlay [V]</span>
+                </div>
                 <div class="shortcut-sheet__cat">Audio</div>
                 <div class="shortcut-sheet__items">
                     <span class="shortcut-sheet__chip">Both [B]</span>
@@ -243,9 +248,11 @@
                     <span class="shortcut-sheet__chip">Newer Only [N]</span>
                     <span class="shortcut-sheet__chip">Mute [M]</span>
                 </div>
-                <div class="shortcut-sheet__cat">Video</div>
+                <div class="shortcut-sheet__cat">Speed</div>
                 <div class="shortcut-sheet__items">
-                    <span class="shortcut-sheet__chip">Cycles: Side by Side → Difference → Overlay [V]</span>
+                    <span class="shortcut-sheet__chip">Slower [Numpad −] [,]</span>
+                    <span class="shortcut-sheet__chip">Faster [Numpad +] [.]</span>
+                    <span class="shortcut-sheet__chip">Reset 1x [Numpad *] [/]</span>
                 </div>
             </div>
         </div>
@@ -267,8 +274,6 @@
                 <li>このページの <strong>HTML・CSS・JavaScript</strong> は目的を問わず<strong>自由に改変・複製・再利用</strong>して構いません（商用・社内ツールを含みます）。連絡も不要です。独自版を公開・配布する場合、フッターのコピーライト表記とリンクは<strong>削除しても構いません</strong>（未改変の配布では残すことを推奨しますが、フォークや大幅なカスタマイズでは必須ではありません）。</li>
                 <li>本アプリは静的ファイル（<code>index.html</code>・<code>css/</code>・<code>js/</code> など）で構成されています。<strong>ビルドやサーバーは不要</strong>です。フォルダごと保存し、ルートの <code>index.html</code> をブラウザで開いてください（<code>file://</code> で動作します。favicon 等の外部 CDN 参照は環境により取得できない場合があります）。</li>
                 <li>ディスク上の元ファイルを書き出し直した場合でも、本アプリは<strong>自動では再読み込みしません</strong>。更新した動画を反映するには、<strong>ドロップゾーン</strong>または<strong>映像エリア</strong>へ再度ドロップしてください。前回セッションの復元はブラウザ内の保存データ（<code>IndexedDB</code>）に保存されたコピーを参照します（元ファイルのパスは保持しません）。ブラウザのストレージ整理により保存データが消えると、セッションは復元できません。</li>
-                <li><strong>Video</strong> / <strong>Audio</strong> / <strong>Export</strong> / <strong>Loop</strong> / <strong>Auto Play</strong> などの UI 設定は、次回開いたときにブラウザ内（<code>localStorage</code> 等）から復元されます。<strong>Speed</strong> は保存されず、ページの<strong>再読み込み</strong>時は常に <strong>1x</strong> です。シークバー位置は保存されず、再読み込み時は常に先頭です。読み込んだ動画データのコピーもブラウザ内（<code>IndexedDB</code> 等）に保存されます。</li>
-                <li>書き出しファイルはブラウザ標準の <strong>WebM</strong> です。MP4 / MJPEG 等への変換や色の扱いは「使い方」の「<strong>書き出し（Exp WebM）とファイルについて</strong>」を参照してください。</li>
             </ul>
         </div>
     </details>
@@ -286,10 +291,10 @@
                         <strong>Play</strong> / <strong>Pause</strong> とシークバー、またはキーボード（ページ中段の<strong>キーボードショートカット</strong>）で再生位置を調整します（<strong>Play/Stop</strong> は [<kbd>Space</kbd>]）。動画の同期ズレは <strong>Playback Drift</strong> 行で確認できます（<strong>Auto Play</strong> が ON のときは、左右がそろうと自動的に再生が始まることもあります）。
                     </li>
                     <li>
-                        トランスポートの <strong>1 段目</strong>で <strong>Video</strong>（<strong>Side by Side</strong> / <strong>Difference</strong> / <strong>Overlay</strong>）、<strong>Audio</strong>（<strong>Both</strong> / <strong>Older Only</strong> / <strong>Newer Only</strong> / <strong>Mute</strong>）、<strong>Export</strong> を選びます。<strong>2 段目</strong>で <strong>Speed</strong> と <strong>Loop</strong>・<strong>Auto Play</strong> を調整します（詳細は各見出しを参照）。
+                        トランスポートの <strong>1 段目</strong>で <strong>Video</strong>（<strong>Side by Side</strong> / <strong>Difference</strong> / <strong>Overlay</strong>）、<strong>Audio</strong>（<strong>Both</strong> / <strong>Older Only</strong> / <strong>Newer Only</strong> / <strong>Mute</strong>）、<strong>Speed</strong> を選びます。<strong>2 段目</strong>で <strong>Loop</strong>・<strong>Auto Play</strong> と <strong>Export</strong> を調整します（詳細は各見出しを参照）。
                     </li>
                     <li>
-                        トランスポート <strong>1 段目</strong>の <strong>Export</strong> でモードと <strong>With TC</strong> を選び、<strong>Exp WebM</strong> でブラウザ内録画の WebM をダウンロードします。書き出し中のオーバレイや <kbd>Esc</kbd> キャンセル、出力ファイルの扱いは「<strong>書き出し（Exp WebM）とファイルについて</strong>」を参照してください。
+                        トランスポート <strong>2 段目</strong>の <strong>Export</strong> でモードと焼き込み（<strong>Time Code</strong> / <strong>Current Frame</strong> / <strong>Total Frame</strong>）を選び、<strong>Exp WebM</strong> で WebM をダウンロードします。書き出し中のオーバレイや <kbd>Esc</kbd> キャンセル、出力ファイルの扱いは「<strong>書き出し（Exp WebM）とファイルについて</strong>」を参照してください。
                     </li>
                 </ol>
             </section>
@@ -337,7 +342,7 @@
                 <h4 id="manual-transport-heading">Playback / Seek（トランスポート）</h4>
                 <ul>
                     <li>
-                        映像の下にある<strong>トランスポート枠</strong>は、画面上から<strong>現在 / 総尺のタイムコード</strong> → <strong>シークバー</strong>と <strong>Play</strong> / <strong>Pause</strong> → <strong>Playback Drift</strong> →（オプション条・<strong>2 段</strong>）<strong>1 段目</strong>：<strong>Video</strong> → <strong>Audio</strong> → <strong>Export</strong>。<strong>2 段目</strong>（中央寄せ）：<strong>Speed</strong> → <strong>Loop</strong> / <strong>Auto Play</strong> の順です。各オプションの詳細は、このあとの見出しどおりです。
+                        映像の下にある<strong>トランスポート枠</strong>は、画面上から<strong>現在 / 総尺のタイムコード</strong> → <strong>シークバー</strong>と <strong>Play</strong> / <strong>Pause</strong> → <strong>Playback Drift</strong> →（オプション条・<strong>2 段</strong>）<strong>1 段目</strong>：<strong>Video</strong> → <strong>Audio</strong> → <strong>Speed</strong>。<strong>2 段目</strong>（中央寄せ）：<strong>Loop</strong> / <strong>Auto Play</strong> → <strong>Export</strong> の順です。各オプションの詳細は、このあとの見出しどおりです。
                     </li>
                     <li>
                         シークバーの<strong>最大値（総尺）</strong>は、左右のうち<strong>長い方</strong>の尺に合わせます。表示中の<strong>現在位置</strong>は、両方の再生位置の<strong>遅い方（大きい方）</strong>に合わせて更新されます。
@@ -420,7 +425,7 @@
                 <h4 id="manual-speed-heading">Speed</h4>
                 <ul>
                     <li>
-                        トランスポート<strong>2 段目</strong>の <strong>Speed</strong> 欄で、左右の再生速度を<strong>リアルタイム</strong>に変えられます。中央には現在の倍率（例：<strong>1x</strong>、<strong>0.5x</strong>、<strong>2x</strong>）が表示されます。
+                        トランスポート<strong>1 段目</strong>の <strong>Speed</strong> 欄で、左右の再生速度を<strong>リアルタイム</strong>に変えられます。中央には現在の倍率（例：<strong>1x</strong>、<strong>0.5x</strong>、<strong>2x</strong>）が表示されます。
                     </li>
                     <li>
                         <strong>−</strong> / <strong>＋</strong> ボタン、またはキーボードの <strong>Slower</strong> / <strong>Faster</strong> / <strong>Reset 1x</strong>（下記「キーボードショートカット」）で<strong>一段階ずつ</strong>変更します。通常は <strong>0.25x</strong> 刻みで、<strong>0.25x</strong> より遅い側の先頭だけ <strong>0.1x</strong> です。範囲は <strong>0.1x</strong>（最大 10 倍スロー）～ <strong>2x</strong>（2 倍速）で、既定は <strong>1x</strong> です。
@@ -468,19 +473,25 @@
                 <h4 id="manual-export-file-heading">書き出し（Exp WebM）とファイルについて</h4>
                 <ul>
                     <li>
-                        トランスポート <strong>1 段目</strong>の <strong>Export</strong> 欄で、プルダウンから書き出しモード（<strong>Compare (PiP)</strong> / <strong>Older only</strong> / <strong>Newer only</strong>）を選び、<strong>With TC</strong> で Compare 時のみタイムコードの左下焼き込みのオン・オフを切り替えます（Older / Newer のみでは<strong>焼き込み必須</strong>のため、オフにすると説明オーバレイが出てチェックはすぐオンに戻ります。閉じ方は <strong>OK</strong>・外側クリック・<kbd>Esc</kbd>）。<strong>Exp WebM</strong> を押すと、<strong>Audio</strong> 行で選んだモードに応じた音声をミックスした WebM を録画します（<strong>Mute</strong> 選択時や Web Audio が使えない場合は<strong>映像のみ</strong>）。<strong>Both</strong> ミックスで書き出すときは左右のデコードが必要なため、片側モードでも<strong>両方のファイルが読み込まれている</strong>必要があります。<strong>Compare (PiP)</strong> は<strong>左右そろっている</strong>必要があります。書き出し中は画面中央にオーバレイが出て<strong>操作がロック</strong>され、<kbd>Esc</kbd> でキャンセルできる旨と進捗が表示されます。尺ぶんリアルタイムで進みます。<strong>Chrome 系</strong>の利用を推奨します。
+                        トランスポート <strong>2 段目</strong>の <strong>Export</strong> 欄で、プルダウンから書き出しモード（<strong>Compare (PiP)</strong> / <strong>Older only</strong> / <strong>Newer only</strong>）を選び、<strong>Time Code</strong>（<strong>既定 ON</strong>）・<strong>Current Frame</strong>（現在フレーム・<strong>既定 OFF</strong>）・<strong>Total Frame</strong>（総フレーム・<strong>既定 OFF</strong>）で焼き込みを切り替えます。
+                    </li>
+                    <li>
+                        <strong>焼き込みラベル（プレビュー）</strong>：Export のチェックがオンで動画が表示されているとき、映像上にプレビューが出ます。<strong>ドラッグ</strong>で移動、ラベル<strong>右下の三角</strong>をドラッグして<strong>サイズ変更</strong>。<strong>ダブルクリック</strong>で標準サイズ・初期位置へ戻します。位置・サイズは次回も <code>localStorage</code> から復元されます。
+                    </li>
+                    <li>
+                        <strong>Exp WebM</strong> の焼き込みは、プレビューと<strong>同じ位置・同じサイズ・同じ見た目</strong>で描画します。<strong>Older only</strong> / <strong>Newer only</strong> では <strong>Time Code</strong>・<strong>Current Frame</strong>・<strong>Total Frame</strong> の少なくとも一方がオンである必要があります（両方オフにすると説明オーバレイが出てチェックはすぐオンに戻ります）。<strong>Exp WebM</strong> を押すと、<strong>オフライン</strong>で各フレームを所定時刻へシーク／デコードしてから WebCodecs で WebM を生成します。焼き込み TC・フレーム番号の精度と左右の同期を優先するため、<strong>尺に比例して時間がかかります</strong>（<strong>Chrome 系推奨</strong>）。<strong>Audio</strong> 行で選んだモードに応じた音声をミックスします（<strong>Mute</strong> 時や音声トラックが無い／デコードできない場合は<strong>映像のみ</strong>）。<strong>Both</strong> ミックスでは片側モードでも<strong>両方のファイルが読み込まれている</strong>必要があります。<strong>Compare (PiP)</strong> は<strong>左右そろっている</strong>必要があります。書き出し中は画面中央にオーバレイが出て<strong>操作がロック</strong>され、<kbd>Esc</kbd> でキャンセルできます。
                     </li>
                     <li>
                         <strong>Compare (PiP)</strong> で <strong>Audio</strong> が <strong>Both</strong> のとき、書き出し音声だけ LR を入れ替えます（<strong>新しい方を L・古い方を R</strong>）。画面では新しい方が全面・古い方が右下 PiP 窓のため、右側に映る古い方の音声を R に合わせる意図です。プレビュー再生の <strong>Both</strong> は「Audio」の説明どおり <strong>古い方 L・新しい方 R</strong> のままです。
                     </li>
                     <li>
-                        書き出しは <strong>Speed</strong> 設定に関わらず常に <strong>1.0×</strong> で録画します。<strong>Exp WebM</strong> を押した時点で <strong>Speed</strong> 表示は <strong>1x</strong> に戻ります（書き出し後も <strong>1x</strong> のまま）。プレビュー再生も書き出し中は <strong>1.0×</strong> です。
+                        書き出しは <strong>Speed</strong> 設定に関わらず常に <strong>1.0×</strong> です。<strong>Exp WebM</strong> を押した時点で <strong>Speed</strong> 表示は <strong>1x</strong> に戻ります（書き出し後も <strong>1x</strong> のまま）。
                     </li>
                     <li>
-                        本アプリの <strong>Exp WebM</strong> は、ブラウザの録画機能と Web Audio で得た音声（<strong>Mute</strong> 時は映像のみ）を組み合わせて、<strong>WebM</strong>（主に VP8 / VP9 系＋必要に応じて Opus）をその場で生成しダウンロードします。編集・納品の現場では <strong>MP4</strong>（H.264 等）や <strong>MJPEG</strong> など別形式に慣れている方も多く、WebM 単体では馴染みが薄い形式かもしれません。
+                        書き出しはブラウザ内で完結するため、これ以上の大幅な高速化は難しいです。速度を最優先する場合は、ネイティブの動画ツール等をご利用ください。
                     </li>
                     <li>
-                        MP4 や MJPEG など<strong>別コンテナへ変換</strong>したい場合は、お手数ですがご利用の OS 向けの<strong>動画変換ツールやエンコーダを別途ご用意</strong>ください。本ページはサーバーにアップロードせず<strong>ブラウザ内だけで完結</strong>するアプリであり、ブラウザが直接書き出せる形式に出力が限られることは<strong>仕様</strong>です。
+                        本アプリの <strong>Exp WebM</strong> は WebCodecs と Web Audio（<strong>Mute</strong> 時は映像のみ）で <strong>WebM</strong>（VP8 / VP9 ＋ Opus）をブラウザ内で生成しダウンロードします。編集・納品の現場では <strong>MP4</strong>（H.264 等）や <strong>MJPEG</strong> など別形式に慣れている方も多く、WebM 単体では馴染みが薄い形式かもしれません。MP4 や MJPEG など<strong>別コンテナへ変換</strong>したい場合は、お手数ですがご利用の OS 向けの<strong>動画変換ツールやエンコーダを別途ご用意</strong>ください。本ページはサーバーにアップロードせず<strong>ブラウザ内だけで完結</strong>するアプリであり、ブラウザが直接書き出せる形式に出力が限られることは<strong>仕様</strong>です。
                     </li>
                     <li>
                         WebM を他形式へ再エンコードするとき、<strong>色空間・ガンマ・レンジ</strong>（limited / full 等）の扱いをツール側で誤ると、結果が意図より暗くなったりコントラストがずれたりすることがあります。変換プリセットや「色の管理」「レンジ」の項目は、利用するソフトのマニュアルで確認してください。
@@ -499,7 +510,7 @@
                 <h4 id="manual-keys-heading">キーボードショートカット</h4>
                 <ul>
                     <li>
-                        <strong>Playback</strong> / <strong>Seek</strong> / <strong>Jump</strong> / <strong>Speed</strong> / <strong>Audio</strong> / <strong>Video</strong> / <strong>Loop</strong> / <strong>Auto Play</strong> などにショートカットがあります。内容はページ中段の<strong>キーボードショートカット</strong>（<strong>Playback</strong>・<strong>Speed</strong>・<strong>Seek</strong>・<strong>Jump</strong>・<strong>Audio</strong>・<strong>Video</strong> の各カテゴリ）どおりです。<strong>Speed</strong> は <strong>Slower</strong> / <strong>Faster</strong> / <strong>Reset 1x</strong>（テンキー <strong>−</strong> / <strong>＋</strong> / <strong>*</strong>、テンキー無しは <strong>,</strong> / <strong>.</strong> / <strong>/</strong>）です。
+                        <strong>Playback</strong> / <strong>Seek</strong> / <strong>Jump</strong> / <strong>Video</strong> / <strong>Audio</strong> / <strong>Speed</strong> などにショートカットがあります。内容はページ中段の<strong>キーボードショートカット</strong>（トランスポートの UI 並びどおり <strong>Playback</strong>・<strong>Seek</strong>・<strong>Jump</strong>・<strong>Video</strong>・<strong>Audio</strong>・<strong>Speed</strong>）です。<strong>Loop</strong> と <strong>Auto Play</strong> は <strong>Playback</strong> に含まれます。<strong>Speed</strong> は <strong>Slower</strong> / <strong>Faster</strong> / <strong>Reset 1x</strong>（テンキー <strong>−</strong> / <strong>＋</strong> / <strong>*</strong>、テンキー無しは <strong>,</strong> / <strong>.</strong> / <strong>/</strong>）です。
                     </li>
                     <li>
                         <strong>無効になるフォーカス</strong>：<code>textarea</code>、<code>select</code>（<strong>Video</strong> のプルダウン含む）、<code>input</code> のうち<strong>シークバー以外</strong>、ならびに編集可能要素にフォーカスがある間は、ショートカットは処理されません。シークバーにフォーカスがある場合は、主要なショートカットキーを押すと<strong>フォーカスが外れてから</strong>処理されます。
@@ -581,7 +592,12 @@
     <script src="js/init-prefs.js"></script>
     <script src="js/mp4-fps.js"></script>
     <script src="js/files-panels.js"></script>
+    <script src="js/player-burn-in-overlay.js"></script>
+    <script src="js/vendor/webm-muxer.js"></script>
+    <script src="js/vendor/mp4box.all.min.js"></script>
     <script src="js/timecode-seek.js"></script>
+    <script src="js/export-mp4-decode.js"></script>
+    <script src="js/export-offline-webcodecs.js"></script>
     <script src="js/webaudio.js"></script>
     <script src="js/drop-files.js"></script>
     <script src="js/events-boot.js"></script>

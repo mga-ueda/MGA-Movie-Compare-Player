@@ -24,7 +24,6 @@
     let pipExportActive = false;
     let pipExportRaf = 0;
     let pipExportUserCancel = false;
-    let currentExportRecorder = null;
     let pipExportEmergencyCleanup = null;
 
     const LS_PREFS_KEY = 'mp4_compare_prefs_v1';
@@ -46,6 +45,16 @@
 
     /** MP4 コンテナ（moov / stts 等）から得た平均 FPS。null は未解析 */
     const containerFps = { left: null, right: null };
+    /** MP4 映像トラックのサンプル（フレーム）数。null は未解析 */
+    const containerSampleCount = { left: null, right: null };
+    /** stsz の sample_count（総フレームの最優先ソース）。null は未解析 */
+    const containerStszSampleCount = { left: null, right: null };
+    /** elst 等によるムービー・タイムライン先頭のフレームオフセット（0 始まり加算） */
+    const containerTimelineFrameOffset = { left: 0, right: 0 };
+    /** MP4 mdhd のメディア尺（秒）。null は未解析 */
+    const containerMediaDurationSec = { left: null, right: null };
+    /** MP4 に音声トラックがあるか。null は未解析、true/false は moov 解析結果 */
+    const containerHasAudio = { left: null, right: null };
 
     function isTypingTarget(el) {
         if (!el || !el.nodeName) return false;

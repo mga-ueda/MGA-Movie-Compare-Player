@@ -1,22 +1,7 @@
-    // タイムコード、シーク、同期、WebM 書き出し
+﻿    // 繧ｿ繧､繝繧ｳ繝ｼ繝峨√す繝ｼ繧ｯ縲∝酔譛溘仝ebM 譖ｸ縺榊・縺・
     function updateDriftAndOverlays() {
-        const dL = getDuration(videoLeft);
-        const dR = getDuration(videoRight);
-        timecodeOverlayLeft.classList.toggle('video-timecode--idle', !dL);
-        timecodeOverlayRight.classList.toggle('video-timecode--idle', !dR);
-        timecodeOverlayLeft.textContent = dL ? formatTimecodeForSide(videoLeft.currentTime || 0, 'left') : '00:00:00:00';
-        timecodeOverlayRight.textContent = dR ? formatTimecodeForSide(videoRight.currentTime || 0, 'right') : '00:00:00:00';
-
-        const stackMode = isStackViewMode(getViewMode());
-        if (timecodeOverlayStack) {
-            timecodeOverlayStack.classList.toggle('video-timecode--idle', !stackMode || !bothReady());
-            if (stackMode && bothReady()) {
-                const t = Math.max(videoLeft.currentTime || 0, videoRight.currentTime || 0);
-                const dur = masterDuration();
-                timecodeOverlayStack.textContent = formatTimecodeForTransport(Math.min(t, dur));
-            } else if (stackMode) {
-                timecodeOverlayStack.textContent = '00:00:00:00';
-            }
+        if (typeof updatePlayerBurnInOverlays === 'function') {
+            updatePlayerBurnInOverlays();
         }
 
         if (!bothReady()) {
@@ -73,7 +58,7 @@
         setOne(videoRight, dR);
     }
 
-    /** 再生再開時に ended のまま固まるのを避ける */
+    /** 蜀咲函蜀埼幕譎ゅ↓ ended 縺ｮ縺ｾ縺ｾ蝗ｺ縺ｾ繧九・繧帝∩縺代ｋ */
     function releaseStuckEnded() {
         const t = parseFloat(seekBar.value) || 0;
         [videoLeft, videoRight].forEach((v) => {
@@ -110,7 +95,7 @@
         currentTimeEl.textContent = formatTimecodeForTransport(t);
     }
 
-    /** 復元待ちのシーク位置を両 video に反映。seek 可能になるまで pending を維持 */
+    /** 蠕ｩ蜈・ｾ・■縺ｮ繧ｷ繝ｼ繧ｯ菴咲ｽｮ繧剃ｸ｡ video 縺ｫ蜿肴丐縲Ｔeek 蜿ｯ閭ｽ縺ｫ縺ｪ繧九∪縺ｧ pending 繧堤ｶｭ謖・*/
     function applyPendingTransportRestore() {
         if (pendingRestoreTime == null || !Number.isFinite(pendingRestoreTime)) return false;
         if (!bothReady()) return false;
@@ -130,8 +115,8 @@
     }
 
     /**
-     * 尺の短い側が終端付近で張り付き、長い側だけがマスター時刻まで進んでいる状態。
-     * このときの currentTime 差は「同期不良」ではなくクリップ長の差なので +1f 補正をしない。
+     * 蟆ｺ縺ｮ遏ｭ縺・・縺檎ｵらｫｯ莉倩ｿ代〒蠑ｵ繧贋ｻ倥″縲・聞縺・・縺縺代′繝槭せ繧ｿ繝ｼ譎ょ綾縺ｾ縺ｧ騾ｲ繧薙〒縺・ｋ迥ｶ諷九・
+     * 縺薙・縺ｨ縺阪・ currentTime 蟾ｮ縺ｯ縲悟酔譛滉ｸ崎憶縲阪〒縺ｯ縺ｪ縺上け繝ｪ繝・・髟ｷ縺ｮ蟾ｮ縺ｪ縺ｮ縺ｧ +1f 陬懈ｭ｣繧偵＠縺ｪ縺・・
      */
     function isAsymmetricClipTailDrift() {
         const dL = getDuration(videoLeft);
@@ -208,25 +193,7 @@
         return getDuration(videoLeft) > 0 && getDuration(videoRight) > 0;
     }
 
-    function pickWebMRecorderMimeType(withAudio) {
-        if (typeof MediaRecorder === 'undefined' || !MediaRecorder.isTypeSupported) return '';
-        const wantA = !!withAudio;
-        const candidates = wantA
-            ? [
-                  'video/webm;codecs=vp9,opus',
-                  'video/webm;codecs=vp8,opus',
-                  'video/webm;codecs=vp9',
-                  'video/webm;codecs=vp8',
-                  'video/webm',
-              ]
-            : ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
-        for (let i = 0; i < candidates.length; i++) {
-            if (MediaRecorder.isTypeSupported(candidates[i])) return candidates[i];
-        }
-        return '';
-    }
-
-    /** 長辺を抑えてメモリ・エンコード負荷を下げる（偶数ピクセル） */
+    /** 髟ｷ霎ｺ繧呈椛縺医※繝｡繝｢繝ｪ繝ｻ繧ｨ繝ｳ繧ｳ繝ｼ繝芽ｲ闕ｷ繧剃ｸ九￡繧具ｼ亥・謨ｰ繝斐け繧ｻ繝ｫ・・*/
     function computePipExportCanvasSize(vw, vh, maxLongEdge) {
         const cap = maxLongEdge > 0 ? maxLongEdge : 1920;
         let w = vw | 0;
@@ -245,14 +212,19 @@
         return { w: w, h: h };
     }
 
-    function drawPipExportFrame(ctx, cw, ch, pipGeom) {
+    function drawPipExportFrame(ctx, cw, ch, pipGeom, frameSources) {
         const pg = pipGeom;
+        const fs = frameSources || null;
         ctx.fillStyle = '#000000';
         ctx.fillRect(0, 0, cw, ch);
-        if (videoRight.readyState >= 2) {
+        if (fs && fs.right) {
+            ctx.drawImage(fs.right, 0, 0, cw, ch);
+        } else if (videoRight.readyState >= 2) {
             ctx.drawImage(videoRight, 0, 0, cw, ch);
         }
-        if (videoLeft.readyState >= 2 && pg.pipW >= 2 && pg.pipH >= 2) {
+        if (fs && fs.left && pg.pipW >= 2 && pg.pipH >= 2) {
+            ctx.drawImage(fs.left, pg.pipX, pg.pipY, pg.pipW, pg.pipH);
+        } else if (videoLeft.readyState >= 2 && pg.pipW >= 2 && pg.pipH >= 2) {
             ctx.drawImage(videoLeft, pg.pipX, pg.pipY, pg.pipW, pg.pipH);
         }
     }
@@ -273,67 +245,113 @@
         return { pipW: pipW, pipH: pipH, pipX: pipX, pipY: pipY };
     }
 
-    function drawExportTcOverlay(ctx, cw, ch, text) {
+    function burnInRoundRectPath(ctx, x, y, w, h, r) {
+        const rad = Math.max(0, Math.min(r, w / 2, h / 2));
+        ctx.beginPath();
+        ctx.moveTo(x + rad, y);
+        ctx.lineTo(x + w - rad, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + rad);
+        ctx.lineTo(x + w, y + h - rad);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - rad, y + h);
+        ctx.lineTo(x + rad, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - rad);
+        ctx.lineTo(x, y + rad);
+        ctx.quadraticCurveTo(x, y, x + rad, y);
+        ctx.closePath();
+    }
+
+    function drawExportBurnOverlay(ctx, cw, ch, text) {
         if (!text) return;
-        const pad = Math.max(6, Math.round(Math.min(cw, ch) * 0.014));
-        const fontPx = Math.max(12, Math.min(26, Math.round(cw * 0.028)));
+        const m =
+            typeof getBurnInDrawMetricsForExport === 'function'
+                ? getBurnInDrawMetricsForExport(cw, ch, ctx, text)
+                : null;
+        const fontPx = m ? m.fontPx : Math.max(12, Math.round(ch * (14 / 440)));
+        let boxW = m ? m.boxW : 0;
+        let boxH = m ? m.boxH : 0;
+        if (!m) {
+            ctx.save();
+            ctx.font = '700 ' + fontPx + 'px Consolas, Monaco, "Cascadia Mono", monospace';
+            boxW = Math.ceil(ctx.measureText(text).width) + 16;
+            boxH = Math.round(fontPx * 1.38) + 8;
+            ctx.restore();
+        }
+        const padL = m ? m.padL : 8;
+        const borderRadius = m ? m.borderRadius : 6;
+        const pos =
+            typeof computeBurnInPixelPosForExport === 'function'
+                ? computeBurnInPixelPosForExport(cw, ch, boxW, boxH)
+                : null;
+        const boxLeft = pos ? pos.left : Math.max(0, Math.round(cw * 0.014) - padL);
+        const boxTop = pos ? ch - pos.bottom - boxH : ch - Math.round(ch * 0.025) - boxH;
+        const textX = boxLeft + (m ? m.textX : padL);
+        const padTfb = m ? m.padT : 5;
+        const padBfb = m ? m.padB : 3;
+        const textCenterY = m ? m.textCenterY : padTfb + (boxH - padTfb - padBfb) / 2;
+        const textY = boxTop + textCenterY;
         ctx.save();
-        ctx.font = '700 ' + fontPx + 'px Consolas, Monaco, "Cascadia Mono", monospace';
-        const tw = Math.ceil(ctx.measureText(text).width);
-        const th = Math.round(fontPx * 1.38);
-        const bx = pad;
-        const by = ch - pad - th;
+        if (typeof applyBurnInCanvasTextStyle === 'function') {
+            applyBurnInCanvasTextStyle(ctx, fontPx);
+        } else {
+            ctx.font = '700 ' + fontPx + 'px Consolas, Monaco, "Cascadia Mono", monospace';
+        }
         ctx.fillStyle = 'rgba(8, 10, 18, 0.82)';
-        ctx.fillRect(bx - 6, by - 4, tw + 12, th + 8);
+        burnInRoundRectPath(ctx, boxLeft, boxTop, boxW, boxH, borderRadius);
+        ctx.fill();
+        burnInRoundRectPath(ctx, boxLeft, boxTop, boxW, boxH, borderRadius);
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
         ctx.lineWidth = 1;
-        ctx.strokeRect(bx - 5.5, by - 3.5, tw + 11, th + 7);
+        ctx.stroke();
         ctx.fillStyle = '#fff4e8';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
         ctx.shadowColor = 'rgba(0, 0, 0, 0.92)';
-        ctx.shadowBlur = 3;
-        ctx.fillText(text, bx, by + th / 2 + 1);
+        ctx.shadowBlur = Math.max(2, Math.round(fontPx * 0.2));
+        ctx.fillText(text, textX, textY);
         ctx.shadowBlur = 0;
         ctx.restore();
     }
 
-    function drawExportFrameBundle(mode, ctx, cw, ch, pipGeom, burnTc, exportDur) {
+    /**
+     * @param {object} [tcSec] 繧ｪ繝輔Λ繧､繝ｳ譖ｸ縺榊・縺礼畑 TC 遘抵ｼ域欠螳壽凾縺ｯ currentTime 繧剃ｽｿ繧上↑縺・ｼ・
+     * @param {number} [tcSec.transportSec]
+     * @param {number} [tcSec.leftSec]
+     * @param {number} [tcSec.rightSec]
+     */
+    function drawExportFrameBundle(mode, ctx, cw, ch, pipGeom, exportDur, tcSec, frameSources) {
+        const burnTc = getExportBurnTc();
+        const burnCurrentFrames = getExportBurnCurrentFrames();
+        const burnTotalFrames = getExportBurnTotalFrames();
+        const fs = frameSources || null;
         if (mode === 'compare-pip') {
-            drawPipExportFrame(ctx, cw, ch, pipGeom);
-            if (burnTc) {
-                const t = Math.max(videoLeft.currentTime || 0, videoRight.currentTime || 0);
-                drawExportTcOverlay(
-                    ctx,
-                    cw,
-                    ch,
-                    formatTimecodeForTransport(Math.min(t, exportDur))
-                );
-            }
+            drawPipExportFrame(ctx, cw, ch, pipGeom, fs);
         } else if (mode === 'solo-old') {
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, cw, ch);
-            if (videoLeft.readyState >= 2) {
+            if (fs && fs.left) {
+                ctx.drawImage(fs.left, 0, 0, cw, ch);
+            } else if (videoLeft.readyState >= 2) {
                 ctx.drawImage(videoLeft, 0, 0, cw, ch);
-            }
-            if (burnTc) {
-                const t = videoLeft.currentTime || 0;
-                const d = getDuration(videoLeft);
-                const cl = d > 0 ? Math.min(t, d) : t;
-                drawExportTcOverlay(ctx, cw, ch, formatTimecodeForSide(cl, 'left'));
             }
         } else {
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, cw, ch);
-            if (videoRight.readyState >= 2) {
+            if (fs && fs.right) {
+                ctx.drawImage(fs.right, 0, 0, cw, ch);
+            } else if (videoRight.readyState >= 2) {
                 ctx.drawImage(videoRight, 0, 0, cw, ch);
             }
-            if (burnTc) {
-                const t = videoRight.currentTime || 0;
-                const d = getDuration(videoRight);
-                const cl = d > 0 ? Math.min(t, d) : t;
-                drawExportTcOverlay(ctx, cw, ch, formatTimecodeForSide(cl, 'right'));
-            }
+        }
+        if (burnTc || burnCurrentFrames || burnTotalFrames) {
+            const label = buildBurnInLabel(
+                mode,
+                exportDur,
+                burnTc,
+                burnCurrentFrames,
+                burnTotalFrames,
+                tcSec
+            );
+            drawExportBurnOverlay(ctx, cw, ch, label);
         }
     }
 
@@ -394,351 +412,11 @@
         if (!pipExportActive) return;
         pipExportUserCancel = true;
         updateExportBlockingSub('Cancelling…');
-        if (currentExportRecorder && currentExportRecorder.state === 'recording') {
-            try {
-                currentExportRecorder.stop();
-            } catch (_) {}
-            return;
-        }
         if (typeof pipExportEmergencyCleanup === 'function') {
             pipExportEmergencyCleanup();
         }
-        pipExportUserCancel = false;
-        writeLog('Export WebM: Cancelled (Escape).');
-        flashSeekHint('Export', 'Cancelled', 'notice');
     }
 
-    async function runSilentWebmExport() {
-        if (pipExportActive || !pipExportCanvas || !exportPipBtn) return;
-        if (!canExportWebm()) return;
-        pipExportUserCancel = false;
-        pipExportEmergencyCleanup = null;
-        const mode = getExportMode();
-        const burnTc = getExportBurnTc();
-        let vw;
-        let vh;
-        let fpsCap;
-        let exportDur;
-        if (mode === 'compare-pip') {
-            vw = videoRight.videoWidth | 0;
-            vh = videoRight.videoHeight | 0;
-            fpsCap = Math.min(60, Math.max(24, masterFpsIntForTransport()));
-            exportDur = masterDuration();
-        } else if (mode === 'solo-old') {
-            vw = videoLeft.videoWidth | 0;
-            vh = videoLeft.videoHeight | 0;
-            fpsCap = Math.min(60, Math.max(24, roundedFpsForSide('left')));
-            exportDur = getDuration(videoLeft);
-        } else {
-            vw = videoRight.videoWidth | 0;
-            vh = videoRight.videoHeight | 0;
-            fpsCap = Math.min(60, Math.max(24, roundedFpsForSide('right')));
-            exportDur = getDuration(videoRight);
-        }
-        const size = computePipExportCanvasSize(vw, vh, 1920);
-        if (!size) {
-            writeLog('Export WebM: Could not read video resolution.');
-            return;
-        }
-        const cw = size.w;
-        const ch = size.h;
-        pipExportCanvas.width = cw;
-        pipExportCanvas.height = ch;
-        const ctx = pipExportCanvas.getContext('2d', { alpha: false });
-        if (!ctx) {
-            writeLog('Export WebM: Failed to acquire Canvas 2D context.');
-            return;
-        }
-        ctx.imageSmoothingEnabled = true;
-        const pipGeom = mode === 'compare-pip' ? buildPipGeometry(cw, ch) : null;
-        let stream;
-        try {
-            stream = pipExportCanvas.captureStream(fpsCap);
-        } catch (e) {
-            writeLog('Export WebM: captureStream failed — ' + (e && e.message ? e.message : String(e)));
-            return;
-        }
-        const videoTrack = stream.getVideoTracks()[0];
-        if (!videoTrack) {
-            writeLog('Export WebM: No video track from canvas.captureStream().');
-            return;
-        }
-
-        ensureWebAudioRouting();
-        let audioAttachNote = '';
-        const exportAudioMode = getAudioMode();
-        try {
-            if (audioCtx && mediaSrcL && mediaSrcR) {
-                if (audioCtx.state === 'suspended') {
-                    await audioCtx.resume();
-                }
-                const exportDest = audioCtx.createMediaStreamDestination();
-                const swapBothLR =
-                    mode === 'compare-pip' && exportAudioMode === 'split-mono';
-                buildAudioGraph(exportAudioMode, exportDest, { swapSplitMonoLR: swapBothLR });
-                if (exportAudioMode !== 'mute') {
-                    const aTr = exportDest.stream.getAudioTracks()[0];
-                    if (aTr) {
-                        stream.addTrack(aTr);
-                    } else {
-                        restorePlaybackAudioRouting();
-                        audioAttachNote = ' (no audio track from Web Audio bus)';
-                    }
-                } else {
-                    audioAttachNote = ' (Audio: Mute, video-only encode)';
-                }
-            } else {
-                audioAttachNote = ' (Web Audio unavailable)';
-            }
-        } catch (eA) {
-            restorePlaybackAudioRouting();
-            audioAttachNote =
-                ' (audio bus failed: ' + (eA && eA.message ? eA.message : String(eA)) + ')';
-        }
-
-        if (audioAttachNote) {
-            writeLog('Export WebM: Audio attach note' + audioAttachNote);
-        }
-
-        const exportStreamHasAudio = stream.getAudioTracks().length > 0;
-        const mime = pickWebMRecorderMimeType(exportStreamHasAudio);
-        if (!mime) {
-            restorePlaybackAudioRouting();
-            writeLog('Export WebM: MediaRecorder WebM not supported in this browser.');
-            flashSeekHint('Export', 'Not supported', 'notice');
-            return;
-        }
-
-        const recorderOpts = {
-            mimeType: mime,
-            videoBitsPerSecond: cw * ch > 2073600 ? 12000000 : 8000000,
-        };
-        if (exportStreamHasAudio) {
-            recorderOpts.audioBitsPerSecond = 160000;
-        }
-
-        let recorder;
-        try {
-            recorder = new MediaRecorder(stream, recorderOpts);
-        } catch (e) {
-            restorePlaybackAudioRouting();
-            writeLog('Export WebM: MediaRecorder constructor failed — ' + (e && e.message ? e.message : String(e)));
-            flashSeekHint('Export', 'Failed', 'notice');
-            return;
-        }
-        currentExportRecorder = recorder;
-        const chunks = [];
-        const modeEn =
-            mode === 'compare-pip' ? 'PiP compare' : mode === 'solo-old' ? 'older only' : 'newer only';
-        const tcEn = burnTc ? 'with TC burn-in' : 'no TC burn-in';
-        const audioEn = audioModeLabel(getAudioMode());
-        pipExportActive = true;
-        resetPlaybackSpeedForExport();
-        setExportBlockingVisible(true);
-        updateExportBlockingSub('Preparing export…');
-        try {
-            const ae = document.activeElement;
-            if (ae && ae !== document.body && typeof ae.blur === 'function') {
-                ae.blur();
-            }
-        } catch (_) {}
-        updateControlsEnabled();
-        videoLeft.pause();
-        videoRight.pause();
-        stopRaf();
-        setPlayingUi(false);
-        applyTimeToVideos(0);
-        seekBar.value = '0';
-        currentTimeEl.textContent = formatTimecodeForTransport(0);
-        updateDriftAndOverlays();
-        await new Promise((r) => setTimeout(r, 80));
-        drawExportFrameBundle(mode, ctx, cw, ch, pipGeom, burnTc, exportDur);
-        let lastProgLog = 0;
-        let recorderStopError = null;
-        let pipUiCleaned = false;
-
-        function cleanupPipExportShell() {
-            if (pipUiCleaned) return;
-            pipUiCleaned = true;
-            setExportBlockingVisible(false);
-            if (pipExportRaf) {
-                cancelAnimationFrame(pipExportRaf);
-                pipExportRaf = 0;
-            }
-            try {
-                stream.getTracks().forEach((t) => t.stop());
-            } catch (_) {}
-            restorePlaybackAudioRouting();
-            videoLeft.pause();
-            videoRight.pause();
-            stopRaf();
-            setPlayingUi(false);
-            applyTimeToVideos(0);
-            seekBar.value = '0';
-            currentTimeEl.textContent = formatTimecodeForTransport(0);
-            updateDriftAndOverlays();
-            pipExportActive = false;
-            exportPipBtn.textContent = EXPORT_WEBM_BTN_LABEL;
-            updateControlsEnabled();
-            currentExportRecorder = null;
-            pipExportEmergencyCleanup = null;
-        }
-        pipExportEmergencyCleanup = cleanupPipExportShell;
-
-        recorder.ondataavailable = (ev) => {
-            if (ev.data && ev.data.size > 0) chunks.push(ev.data);
-        };
-        recorder.onerror = () => {
-            if (!recorderStopError) recorderStopError = 'MediaRecorder reported an error.';
-            try {
-                if (recorder.state === 'recording') recorder.stop();
-            } catch (_) {}
-        };
-        recorder.onstop = () => {
-            cleanupPipExportShell();
-            if (pipExportUserCancel) {
-                pipExportUserCancel = false;
-                writeLog('Export WebM: Cancelled (Escape).');
-                flashSeekHint('Export', 'Cancelled', 'notice');
-                return;
-            }
-            if (recorderStopError) {
-                writeLog('Export WebM: ' + recorderStopError);
-                flashSeekHint('Export', 'Failed', 'notice');
-                return;
-            }
-            const blob = new Blob(chunks, { type: mime.split(';')[0] || 'video/webm' });
-            if (!blob.size) {
-                writeLog('Export WebM: Output size is zero.');
-                flashSeekHint('Export', 'Failed', 'notice');
-                return;
-            }
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-            a.href = url;
-            let fname = 'mga-export-';
-            if (mode === 'compare-pip') fname += 'compare-pip-';
-            else if (mode === 'solo-old') fname += 'solo-old-';
-            else fname += 'solo-new-';
-            if (burnTc) fname += 'tc-';
-            fname += stamp + '.webm';
-            a.download = fname;
-            a.rel = 'noopener';
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            setTimeout(() => URL.revokeObjectURL(url), 4000);
-            writeLog(
-                'Export WebM: Done (' +
-                    modeEn +
-                    ', ' +
-                    tcEn +
-                    ', ' +
-                    (exportStreamHasAudio ? 'audio ' + audioEn : 'no audio') +
-                    ', ' +
-                    Math.round(blob.size / 1024) +
-                    ' KiB, ' +
-                    cw +
-                    '×' +
-                    ch +
-                    ')'
-            );
-            flashSeekHint('Export', 'Download started', 'notice');
-        };
-        try {
-            recorder.start(400);
-        } catch (e) {
-            recorderStopError = 'record.start failed — ' + (e && e.message ? e.message : String(e));
-            cleanupPipExportShell();
-            writeLog('Export WebM: ' + recorderStopError);
-            flashSeekHint('Export', 'Failed', 'notice');
-            return;
-        }
-        updateExportBlockingSub('Recording… 0%');
-        writeLog(
-            'Export WebM: Started (' +
-                modeEn +
-                ', ' +
-                tcEn +
-                ', audio ' +
-                audioEn +
-                (exportStreamHasAudio ? ' -> export bus' : ' (video-only)') +
-                ', ~' +
-                fpsCap +
-                ' fps target, duration ' +
-                formatTimecodeForTransport(exportDur) +
-                ', real-time encode)'
-        );
-        {
-            let playLeftOk = false;
-            try {
-                await videoLeft.play();
-                playLeftOk = !videoLeft.paused;
-            } catch (_) {
-                playLeftOk = false;
-            }
-            let playRightOk = false;
-            try {
-                await videoRight.play();
-                playRightOk = !videoRight.paused;
-            } catch (_) {
-                playRightOk = false;
-            }
-            const am = exportStreamHasAudio ? getAudioMode() : null;
-            const audioNeedL = !!(am && (am === 'split-mono' || am === 'old-stereo'));
-            const audioNeedR = !!(am && (am === 'split-mono' || am === 'new-stereo'));
-            const videoNeedL = mode === 'compare-pip' || mode === 'solo-old';
-            const videoNeedR = mode === 'compare-pip' || mode === 'solo-new';
-            const needL = videoNeedL || audioNeedL;
-            const needR = videoNeedR || audioNeedR;
-            const playOk = (!needL || playLeftOk) && (!needR || playRightOk);
-            if (!playOk) {
-                recorderStopError =
-                    'play() failed — could not start every video element required for this export mode and Audio option.';
-                try {
-                    if (recorder.state === 'recording') recorder.stop();
-                } catch (_) {}
-                return;
-            }
-        }
-        setPlayingUi(true);
-        if (!rafId) rafId = requestAnimationFrame(tick);
-        const drawLoop = () => {
-            if (!pipExportActive) return;
-            drawExportFrameBundle(mode, ctx, cw, ch, pipGeom, burnTc, exportDur);
-            let tProg;
-            if (mode === 'compare-pip') {
-                tProg = Math.max(videoLeft.currentTime || 0, videoRight.currentTime || 0);
-            } else if (mode === 'solo-old') {
-                tProg = videoLeft.currentTime || 0;
-            } else {
-                tProg = videoRight.currentTime || 0;
-            }
-            const now = performance.now();
-            if (now - lastProgLog > 900) {
-                lastProgLog = now;
-                const pct =
-                    exportDur > 0 ? Math.min(100, Math.round((100 * tProg) / exportDur)) : 0;
-                updateExportBlockingSub('Recording… ' + pct + '%');
-            }
-            if (tProg >= exportDur - 0.035) {
-                pipExportRaf = 0;
-                recorderStopError = null;
-                try {
-                    if (recorder.state === 'recording') recorder.stop();
-                } catch (e2) {
-                    recorderStopError = 'record.stop failed — ' + (e2 && e2.message ? e2.message : String(e2));
-                    cleanupPipExportShell();
-                    writeLog('Export WebM: ' + recorderStopError);
-                    flashSeekHint('Export', 'Failed', 'notice');
-                }
-                return;
-            }
-            pipExportRaf = requestAnimationFrame(drawLoop);
-        };
-        pipExportRaf = requestAnimationFrame(drawLoop);
-    }
 
     function updateControlsEnabled() {
         const readyTransport = bothReady();
@@ -747,10 +425,16 @@
         playStopBtn.disabled = !readyTransport || xl;
         if (exportModeSelect) exportModeSelect.disabled = xl;
         if (exportBurnTcCheckbox) {
-            if (isSoloExportMode()) {
-                exportBurnTcCheckbox.checked = true;
-            }
             exportBurnTcCheckbox.disabled = xl;
+        }
+        if (exportBurnCurrentFramesCheckbox) {
+            exportBurnCurrentFramesCheckbox.disabled = xl;
+        }
+        if (exportBurnTotalFramesCheckbox) {
+            exportBurnTotalFramesCheckbox.disabled = xl;
+        }
+        if (!xl && isSoloExportMode()) {
+            enforceSoloExportBurnCheckboxes();
         }
         if (exportPipBtn) exportPipBtn.disabled = !canExportWebm() || xl;
         updatePlaybackSpeedUi();
@@ -799,6 +483,21 @@
         const tmpF = containerFps.left;
         containerFps.left = containerFps.right;
         containerFps.right = tmpF;
+        const tmpS = containerSampleCount.left;
+        containerSampleCount.left = containerSampleCount.right;
+        containerSampleCount.right = tmpS;
+        const tmpStsz = containerStszSampleCount.left;
+        containerStszSampleCount.left = containerStszSampleCount.right;
+        containerStszSampleCount.right = tmpStsz;
+        const tmpOff = containerTimelineFrameOffset.left;
+        containerTimelineFrameOffset.left = containerTimelineFrameOffset.right;
+        containerTimelineFrameOffset.right = tmpOff;
+        const tmpMd = containerMediaDurationSec.left;
+        containerMediaDurationSec.left = containerMediaDurationSec.right;
+        containerMediaDurationSec.right = tmpMd;
+        const tmpA = containerHasAudio.left;
+        containerHasAudio.left = containerHasAudio.right;
+        containerHasAudio.right = tmpA;
         const tmp = fileLeft;
         fileLeft = fileRight;
         fileRight = tmp;

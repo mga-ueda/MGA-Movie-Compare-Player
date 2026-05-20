@@ -292,9 +292,7 @@
         }
         .compare-stage--composite .video-frame--stack .video-timecode {
             font-size: clamp(22px, 2.7vw, 28px);
-            padding: 8px 14px;
-            left: 14px;
-            bottom: 14px;
+            padding: 0.36em 0.5em;
         }
         .video-stack-top--diff {
             z-index: 2;
@@ -327,9 +325,14 @@
         }
         .video-timecode {
             position: absolute;
-            left: 10px;
-            bottom: 10px;
+            left: 0;
+            bottom: 0;
+            visibility: hidden;
             z-index: 2;
+            overflow: visible;
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-start;
             font-family: 'Consolas', 'Monaco', 'Cascadia Mono', monospace;
             font-size: clamp(11px, 1.35vw, 14px);
             font-weight: 700;
@@ -337,15 +340,105 @@
             color: #fff4e8;
             text-shadow:
                 0 0 6px rgba(0, 0, 0, 0.95),
-                0 1px 3px rgba(0, 0, 0, 0.9),
+                0 0 3px rgba(0, 0, 0, 0.88),
                 0 0 1px rgba(0, 0, 0, 1);
-            line-height: 1.2;
+            line-height: 1;
+            white-space: nowrap;
+            width: max-content;
+            max-width: max-content;
+            box-sizing: border-box;
             pointer-events: none;
             user-select: none;
-            padding: 4px 8px;
-            border-radius: 6px;
+            padding: 0.38em 0.57em;
+            border-radius: 0.43em;
             background: rgba(8, 10, 18, 0.55);
             border: 1px solid rgba(255, 255, 255, 0.12);
+            touch-action: none;
+        }
+        .video-timecode__text {
+            display: block;
+            line-height: 1;
+            margin: 0;
+            padding: 0;
+        }
+        .video-timecode--hidden {
+            display: none !important;
+        }
+        .video-timecode--draggable {
+            pointer-events: auto;
+            cursor: grab;
+        }
+        .video-timecode--dragging {
+            cursor: grabbing;
+        }
+        .video-timecode--resizing {
+            cursor: nwse-resize;
+        }
+        .video-timecode:not(.video-timecode--draggable) .video-timecode__resize-handle {
+            display: none;
+        }
+        .video-timecode__resize-handle {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            width: 10px;
+            height: 10px;
+            z-index: 5;
+            pointer-events: auto;
+            cursor: nwse-resize;
+            touch-action: none;
+            border-radius: 0 0 6px 0;
+            background: linear-gradient(
+                135deg,
+                transparent 0 50%,
+                rgba(255, 140, 50, 0.72) 50% 100%
+            );
+            transition: filter 0.12s ease;
+        }
+        .video-timecode--draggable:hover .video-timecode__resize-handle,
+        .video-timecode--resizing .video-timecode__resize-handle {
+            filter: brightness(1.12);
+        }
+        .video-timecode--snap-x,
+        .video-timecode--snap-y {
+            border-color: rgba(255, 186, 110, 0.72);
+            box-shadow:
+                0 0 0 1px rgba(255, 186, 110, 0.35),
+                0 0 10px rgba(255, 140, 50, 0.22);
+        }
+        .burn-in-center-guide {
+            position: absolute;
+            z-index: 1;
+            pointer-events: none;
+            background: rgba(255, 186, 110, 0.9);
+            box-shadow:
+                0 0 6px rgba(255, 140, 50, 0.55),
+                0 0 14px rgba(255, 186, 110, 0.28);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.1s ease, visibility 0.1s ease;
+        }
+        .burn-in-center-guide--v {
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 1px;
+            margin-left: -0.5px;
+        }
+        .burn-in-center-guide--h {
+            left: 0;
+            right: 0;
+            top: 50%;
+            height: 1px;
+            margin-top: -0.5px;
+        }
+        .video-frame--burn-snap-x .burn-in-center-guide--v {
+            opacity: 1;
+            visibility: visible;
+        }
+        .video-frame--burn-snap-y .burn-in-center-guide--h {
+            opacity: 1;
+            visibility: visible;
         }
         .video-timecode--idle {
             opacity: 0.45;
@@ -880,7 +973,7 @@
             padding: 0 8px;
             font-size: 0.72rem;
         }
-        .transport-opt-cell--export .transport-compact-lbl--export-tc span {
+        .transport-opt-cell--export .transport-compact-lbl--export-burn span {
             letter-spacing: 0.04em;
         }
         .transport-opt-box--export {
