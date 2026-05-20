@@ -169,6 +169,18 @@
         return String(n).padStart(2, '0');
     }
 
+    /** 総フレーム数の桁数（ラベル幅を途中で変えないための現在フレーム表示幅） */
+    function burnInFrameDigitWidth(totalFrames) {
+        const t = Math.max(0, totalFrames | 0);
+        if (t <= 0) return 1;
+        return String(t).length;
+    }
+
+    function formatBurnInCurrentFrame(cur, digitWidth) {
+        const w = Math.max(1, digitWidth | 0);
+        return String(Math.max(0, cur | 0)).padStart(w, '0');
+    }
+
     function fpsFloatForSide(side) {
         const c = containerFps[side];
         return c != null && c > 0 ? c : DISPLAY_FPS;
@@ -452,10 +464,13 @@
         if (burnTotalFrames) {
             tot = exportTotalFrameCount(mode, exportDur);
         }
+        const widthRef =
+            tot != null ? tot : burnCurrentFrames ? exportTotalFrameCount(mode, exportDur) : 0;
+        const curWidth = burnInFrameDigitWidth(widthRef);
         if (burnCurrentFrames && burnTotalFrames) {
-            return String(cur) + '/' + String(tot);
+            return formatBurnInCurrentFrame(cur, curWidth) + '/' + String(tot);
         }
-        if (burnCurrentFrames) return String(cur);
+        if (burnCurrentFrames) return formatBurnInCurrentFrame(cur, curWidth);
         return String(tot);
     }
 
