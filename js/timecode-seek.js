@@ -1,4 +1,4 @@
-﻿    // 繧ｿ繧､繝繧ｳ繝ｼ繝峨√す繝ｼ繧ｯ縲∝酔譛溘仝ebM 譖ｸ縺榊・縺・
+    // タイムコード、シーク、同期、WebM 書き出し
     function updateDriftAndOverlays() {
         if (typeof updatePlayerBurnInOverlays === 'function') {
             updatePlayerBurnInOverlays();
@@ -58,7 +58,7 @@
         setOne(videoRight, dR);
     }
 
-    /** 蜀咲函蜀埼幕譎ゅ↓ ended 縺ｮ縺ｾ縺ｾ蝗ｺ縺ｾ繧九・繧帝∩縺代ｋ */
+    /** 再生再開時に ended のまま固まるのを避ける */
     function releaseStuckEnded() {
         const t = parseFloat(seekBar.value) || 0;
         [videoLeft, videoRight].forEach((v) => {
@@ -95,7 +95,7 @@
         currentTimeEl.textContent = formatTimecodeForTransport(t);
     }
 
-    /** 蠕ｩ蜈・ｾ・■縺ｮ繧ｷ繝ｼ繧ｯ菴咲ｽｮ繧剃ｸ｡ video 縺ｫ蜿肴丐縲Ｔeek 蜿ｯ閭ｽ縺ｫ縺ｪ繧九∪縺ｧ pending 繧堤ｶｭ謖・*/
+    /** 復元待ちのシーク位置を両 video に反映。seek 可能になるまで pending を維持 */
     function applyPendingTransportRestore() {
         if (pendingRestoreTime == null || !Number.isFinite(pendingRestoreTime)) return false;
         if (!bothReady()) return false;
@@ -115,8 +115,8 @@
     }
 
     /**
-     * 蟆ｺ縺ｮ遏ｭ縺・・縺檎ｵらｫｯ莉倩ｿ代〒蠑ｵ繧贋ｻ倥″縲・聞縺・・縺縺代′繝槭せ繧ｿ繝ｼ譎ょ綾縺ｾ縺ｧ騾ｲ繧薙〒縺・ｋ迥ｶ諷九・
-     * 縺薙・縺ｨ縺阪・ currentTime 蟾ｮ縺ｯ縲悟酔譛滉ｸ崎憶縲阪〒縺ｯ縺ｪ縺上け繝ｪ繝・・髟ｷ縺ｮ蟾ｮ縺ｪ縺ｮ縺ｧ +1f 陬懈ｭ｣繧偵＠縺ｪ縺・・
+     * 尺の短い方が終端付近で張り付き、長い方だけがマスター時刻まで進んでいる状態。
+     * このときの currentTime 差は「同期不良」ではなくクリップ長の差なので +1f 補正をしない。
      */
     function isAsymmetricClipTailDrift() {
         const dL = getDuration(videoLeft);
@@ -193,7 +193,7 @@
         return getDuration(videoLeft) > 0 && getDuration(videoRight) > 0;
     }
 
-    /** 髟ｷ霎ｺ繧呈椛縺医※繝｡繝｢繝ｪ繝ｻ繧ｨ繝ｳ繧ｳ繝ｼ繝芽ｲ闕ｷ繧剃ｸ九￡繧具ｼ亥・謨ｰ繝斐け繧ｻ繝ｫ・・*/
+    /** 長辺を抑えてメモリ・エンコード負荷を下げる（偶数ピクセル） */
     function computePipExportCanvasSize(vw, vh, maxLongEdge) {
         const cap = maxLongEdge > 0 ? maxLongEdge : 1920;
         let w = vw | 0;
@@ -313,7 +313,7 @@
     }
 
     /**
-     * @param {object} [tcSec] 繧ｪ繝輔Λ繧､繝ｳ譖ｸ縺榊・縺礼畑 TC 遘抵ｼ域欠螳壽凾縺ｯ currentTime 繧剃ｽｿ繧上↑縺・ｼ・
+     * @param {object} [tcSec] オフライン書き出し用 TC 秒（指定時は currentTime を使わない）
      * @param {number} [tcSec.transportSec]
      * @param {number} [tcSec.leftSec]
      * @param {number} [tcSec.rightSec]
